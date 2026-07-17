@@ -3,15 +3,32 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Moving")]
     public float speed;
     public float rotationSpeed;
+    [Header("Jump")]
+    public float jumpForce = 5;
+    Rigidbody rb;
 
     Vector3 forward, right; // vectores de la cámara proyectados al plano XZ, se calculan una vez en Start()
-    public InputAction moveAction;
+    [Header("Inputs")]
+    private InputSystem_Actions inputActions;
+
+    [Header("isGroundedCheck")]
+    bool isGrounded = true;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundRadius = 0.25f;
+    [SerializeField] private LayerMask groundLayer;
+
+
+    private void Awake()
+    {
+        inputActions = new InputSystem_Actions();
+    }
 
     private void OnEnable()
     {
-        moveAction.Enable(); // activa la acción de input al habilitar el componente
+        inputActions.Enable();
     }
 
     void Start()
@@ -29,12 +46,14 @@ public class PlayerMovement : MonoBehaviour
 
         // Ahora forward y right son los vectores correctos para movernos
         // relativos a lo que el jugador ve en pantalla
+
+        rb = GetComponent<Rigidbody>();
     }
 
     void Update()
     {
         // Leemos el valor del input como Vector2 (x = izq/der, y = arr/aba)
-        Vector2 input = moveAction.ReadValue<Vector2>();
+        Vector2 input = inputActions.Player.Move.ReadValue<Vector2>();
 
         // Convertimos el input 2D a una dirección 3D usando los vectores de la cámara
         // input.y (W/flecha arriba) -> forward (lejos de la cámara)
@@ -56,5 +75,33 @@ public class PlayerMovement : MonoBehaviour
             // Slerp suaviza la rotación para que no sea instantánea
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
+
+        //Logica de Salto
+        IsGrounded();
+        if (inputActions.Player.Jump.WasPressedThisFrame() && isGrounded == true)
+        {
+            Jump();
+        }
+    }
+    public void IsGrounded()
+    {
+        isGrounded = Physics.CheckSphere(
+        groundCheck.position,
+        groundRadius,
+        groundLayer);
+    }
+
+    public void Jump()
+    {
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, 0, rb.linearVelocity.z);
+
+        rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+    }
+    private void OnDrawGizmosSelected()
+    {
+        if (groundCheck == null) return;
+
+        Gizmos.color = isGrounded ? Color.green : Color.red;
+        Gizmos.DrawWireSphere(groundCheck.position, groundRadius);
     }
 }

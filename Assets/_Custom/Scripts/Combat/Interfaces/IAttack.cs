@@ -2,5 +2,5 @@ using UnityEngine;
 
 public interface IAttack
 {
-    void Execute();
+    void Execute(AttackContext context);
 }

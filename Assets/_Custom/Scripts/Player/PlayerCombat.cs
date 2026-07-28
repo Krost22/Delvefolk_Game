@@ -4,6 +4,8 @@ public class PlayerCombat : MonoBehaviour
 {
     private InputSystem_Actions inputActions;
     private IAttack currentAttack;
+    [SerializeField]
+    private Transform combatOrigin;
 
     private void OnEnable()
     {
@@ -20,7 +22,18 @@ public class PlayerCombat : MonoBehaviour
     {
         if (inputActions.Player.Attack.WasPressedThisFrame())
         {
-            currentAttack.Execute();
+            AttackContext context = new AttackContext(transform, combatOrigin);
+
+            currentAttack.Execute(context);
         }
+    }
+    //gizmo de la zona de la patada del jugador
+    private void OnDrawGizmosSelected()
+    {
+        if (combatOrigin == null)
+            return;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(combatOrigin.position, 0.5f);
     }
 }

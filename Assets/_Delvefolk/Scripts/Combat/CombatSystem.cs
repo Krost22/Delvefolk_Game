@@ -10,6 +10,8 @@ namespace Delvefolk
         public string Text, Sound;
         public Player By;
         public bool Stomp, Reflected, Blocked;
+        public string BlockText;   // rótulo cuando un jefe bloquea el golpe
+        public Hit Clone() { return (Hit)MemberwiseClone(); }
 
         public static Hit Of(float damage, float knock, float stun, float dirX, float dirZ, Player by = null)
         {

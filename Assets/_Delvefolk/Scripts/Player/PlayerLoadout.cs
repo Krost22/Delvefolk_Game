@@ -80,6 +80,7 @@ namespace Delvefolk
         public string bonusMode = "normal";
         public bool exclusiveAbilities = false;
         public bool swapAllies = true;
+        public bool bosses = true;   // peleas de jefe cada pocos pisos
 
         public string BonusMode { get { return bonusMode; } set { bonusMode = value; } }
         public bool ExclusiveAbilities { get { return exclusiveAbilities; } set { exclusiveAbilities = value; } }

@@ -19,8 +19,10 @@ El juego es jugable de principio a fin: título → lobby → pisos → pisos bo
 - Pruebas `ShopTests` (5). Totales: EditMode 47/47, PlayMode 78/78.
 
 ## Pendiente
-- **Fase 8 jefes**: `Game.Bonus.cs` ya llama a `InitShopAndBosses`, `BossSystemsUpdate`, `BossDescend` (parciales vacíos/no
-  implementados). Falta Boss, BossFloor, Golem, Twins, Chef, Bell, telegrafías, oleadas, proyectiles.
+- **Fase 8 jefes (en curso)**: HECHO núcleo (`Scripts/Bosses/BossCore.cs`: avisos, ondas, proyectiles, `Boss`, registro),
+  `BossFloor.cs`, `Core/Game.Boss.cs` y Gólem (`GolemBoss.cs`) con `Tests/PlayMode/BossTests.cs` (11 en verde).
+  FALTAN: Gemelos (TwinsBoss.js), Chef (ChefBoss.js), Campana (BellBoss.js) y sus pruebas (tests/boss-*.test.js).
+  Cada jefe se registra en `BossRegistrations` (método parcial con su nombre); mientras falte, `Bosses.Get` cae en el Gólem.
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Pregunta §11 abierta: el rodillo de Último Aliento dice "sáltalo con {J}" pero el original nunca comprueba el salto.
   Se mantiene el comportamiento original; propuesta: permitir esquivar con `JumpY > 0.51`.

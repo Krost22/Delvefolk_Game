@@ -10,9 +10,28 @@ namespace Delvefolk
     //  - Para rescatar: pegarle fuerte, aturdirlo, saltarle encima o empujarlo lejos.
     //  - "Último recurso" activo: no consigue agarrarte.
     // Modelo: el árbol gigante del paquete de monstruos (sus brazos largos dan el abrazo).
-    public sealed class Grabber : Enemy
+    // Lo que puede tener agarrado a un jugador (Abrazón, Chef, caldero): el jugador forcejea contra él
+    public interface IGrabHolder
+    {
+        bool Dead { get; }
+        bool Removed { get; }
+        Player Held { get; }
+        float Facing { get; }
+        float EscapePresses { get; }
+        float EscapeDecay { get; }
+        Vector3 HoldPos();
+        void ReleaseHeld(string why);
+    }
+
+    public sealed class Grabber : Enemy, IGrabHolder
     {
         public Player Held;
+        Player IGrabHolder.Held { get { return Held; } }
+        bool IGrabHolder.Dead { get { return Dead; } }
+        bool IGrabHolder.Removed { get { return Removed; } }
+        float IGrabHolder.Facing { get { return Facing; } }
+        float IGrabHolder.EscapePresses { get { return Cfg.EscapePresses; } }
+        float IGrabHolder.EscapeDecay { get { return Cfg.EscapeDecay; } }
         float squeezeT;
         Transform body3d;
         Vector3 bodyScale = Vector3.one;

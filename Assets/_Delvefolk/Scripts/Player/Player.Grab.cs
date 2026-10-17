@@ -54,7 +54,7 @@ namespace Delvefolk
         // ---------- Agarrado por un enemigo ----------
         public Grabber GrabbedByGrabber { get { return GrabbedBy as Grabber; } }
 
-        public void OnGrabbedBy(Enemy e)
+        public void OnGrabbedBy(IGrabHolder e)
         {
             ReleaseCarriedForGrab();
             CancelAttack(); CancelEating(); Ability.Finish(); EndJump();
@@ -68,7 +68,7 @@ namespace Delvefolk
 
         partial void UpdateGrabbed(float dt)
         {
-            var e = GrabbedBy as Grabber;
+            var e = GrabbedBy as IGrabHolder;
             if (e == null || e.Dead || e.Removed || e.Held != this) { FreeFromGrab(); return; }
             var h = e.HoldPos();
             Body.X = h.x; Body.Z = h.z;
@@ -81,7 +81,7 @@ namespace Delvefolk
             Model.localRotation = ProcMesh.EulerXYZ(0.15f, 0, Mathf.Sin(t * 24f) * 0.2f);
             SetFeet(Mathf.Sin(t * 26f) * 0.25f, -Mathf.Sin(t * 26f) * 0.25f);
             if (!Model.gameObject.activeSelf) Model.gameObject.SetActive(true);
-            if (StruggleStep(dt, e.Cfg.EscapePresses, e.Cfg.EscapeDecay)) e.ReleaseHeld("escape");
+            if (StruggleStep(dt, e.EscapePresses, e.EscapeDecay)) e.ReleaseHeld("escape");
         }
 
         // Vuelve a tierra tras un agarre (lo llama el enemigo al soltarle, o él mismo si el enemigo desaparece)
@@ -182,7 +182,7 @@ namespace Delvefolk
             if (Carrying != null) ReleaseCarriedImpl(2f);
             Eating = null;
             Thrown = null;
-            var gb = GrabbedBy as Grabber;
+            var gb = GrabbedBy as IGrabHolder;
             if (gb != null && gb.Held == this) gb.ReleaseHeld("dead");
         }
     }

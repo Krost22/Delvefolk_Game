@@ -67,6 +67,8 @@ namespace Delvefolk
             c.R.gameObject.SetActive(state != CellState.Safe);
         }
 
+        public int CellCount { get { return order.Count; } }
+
         public int Count(CellState state)
         {
             int n = 0;

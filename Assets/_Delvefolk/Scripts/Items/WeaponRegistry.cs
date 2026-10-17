@@ -36,6 +36,7 @@ namespace Delvefolk
             Register('\0', "spear", () => new SpearWeapon());
             Register('\0', "axe", () => new AxeWeapon());
             Register('\0', "shotgun", () => new ShotgunWeapon());
+            Register('\0', "rottencheese", () => new RottenCheeseFood());
             RegisterExtra();
         }
 

@@ -149,7 +149,7 @@ namespace Delvefolk
         partial void PinPlayerImpl(Player p)
         {
             if (p.CarriedBy != null) { p.Body.X = p.CarriedBy.X; p.Body.Z = p.CarriedBy.Z; }
-            var gb = p.GrabbedBy as Grabber;
+            var gb = p.GrabbedBy as IGrabHolder;
             if (gb != null) { var h = gb.HoldPos(); p.Body.X = h.x; p.Body.Z = h.z; }
         }
 

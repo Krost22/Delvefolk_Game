@@ -598,6 +598,8 @@ namespace Delvefolk
             ReviveT = 0f;
             G.Ui.SetHealth(Index, Hp, MaxHp);
             G.Ui.SetPlayerBar(Index, -1f, BarKind.None);
+            // Corrección pedida por el usuario: el original dejaba el panel en "DERRIBADO" hasta el siguiente piso
+            G.Ui.SetDowned(Index, false);
             G.Audio.Play("heal");
             G.Ui.FloatText(X, 2.6f, Z, "¡De vuelta!", TextStyle.Heal);
         }

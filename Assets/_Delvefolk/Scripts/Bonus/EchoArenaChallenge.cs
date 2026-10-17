@@ -10,8 +10,10 @@ namespace Delvefolk
     public sealed class EchoArenaChallenge : BonusChallenge
     {
         const int N = 15, Cc = 7;
+        public const int Center = Cc;   // casilla central de la arena (x = z)
         readonly List<Vector2Int> floorTiles = new List<Vector2Int>();
         public HazardFloor Hazard;
+        public List<Vector2Int> FloorTiles { get { return floorTiles; } }
         public int SafeRing;      // anillo máximo seguro
         public float TimeLeft, WaveT, ShrinkT;
         public int Wave, Kills;
@@ -69,7 +71,7 @@ namespace Delvefolk
             };
         }
 
-        static int Ring(int tx, int tz) { return Mathf.Max(Mathf.Abs(tx - Cc), Mathf.Abs(tz - Cc)); }
+        public static int Ring(int tx, int tz) { return Mathf.Max(Mathf.Abs(tx - Cc), Mathf.Abs(tz - Cc)); }
 
         public override void Setup()
         {

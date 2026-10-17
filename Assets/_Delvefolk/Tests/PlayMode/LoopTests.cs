@@ -67,6 +67,22 @@ namespace Delvefolk.Tests
             G.Input.Release(code);
         }
 
+        // Varias teclas a la vez (T.tap('Space', 'Enter'))
+        protected void TapAll(params string[] codes)
+        {
+            foreach (var c in codes) G.Input.Tap(c);
+            Step(1);
+            foreach (var c in codes) G.Input.Release(c);
+        }
+
+        // Mantener teclas n frames (T.press … T.step(n) … T.release)
+        protected void HoldAll(int frames, params string[] codes)
+        {
+            foreach (var c in codes) G.Input.Tap(c);
+            Step(frames);
+            foreach (var c in codes) G.Input.Release(c);
+        }
+
         protected Enemy SpawnAt(char ch, float webX, float webZ)
         {
             var e = G.SpawnEnemy(ch, webX, -webZ);

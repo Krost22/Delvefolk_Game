@@ -62,9 +62,17 @@ namespace Delvefolk
         // Mesita con plato y comida low-poly al azar (un cerdo asado con aura rosa en la mesa grande)
         protected override void MakeMesh(Item it)
         {
-            bool big = it.Kind == "special";
+            Transform food;
+            it.Mesh = BuildTable(Root, it.Kind == "special", Rnd, out food);
+            it.Food = food;
+        }
+
+        // Mesita con plato y comida low-poly al azar (un cerdo asado con aura rosa en la mesa grande).
+        // También la usan las viñetas ilustradas de la introducción.
+        public static Transform BuildTable(Transform parent, bool big, Rng rnd, out Transform food)
+        {
             var root = new GameObject(big ? "FestinProhibido" : "Plato").transform;
-            root.SetParent(Root, false);
+            root.SetParent(parent, false);
             var b = new MeshBuilder();
             var wood = MathUtil.Hex(0x6a4426);
             b.Add(ProcMesh.Cylinder(big ? 0.95f : 0.6f, big ? 0.95f : 0.6f, 0.1f, 10), new Vector3(0, 0.75f, 0), wood);
@@ -72,11 +80,11 @@ namespace Delvefolk
             b.Add(ProcMesh.Cylinder(big ? 0.7f : 0.42f, big ? 0.6f : 0.36f, 0.05f, 12), new Vector3(0, 0.83f, 0), MathUtil.Hex(0xe8e0d0));
             CharacterModel.MeshObject(root, "Mesa", b.ToMesh("mesita"), Mats.Lit, Vector3.zero);
             Entity.BlobShadow(root, big ? 0.9f : 0.6f);
-            var food = new GameObject("Comida").transform;
+            food = new GameObject("Comida").transform;
             food.SetParent(root, false);
             food.localPosition = new Vector3(0, big ? 1.15f : 0.98f, 0);
             var f = new MeshBuilder();
-            int variant = big ? 4 : (int)(Rnd.Next() * 4);
+            int variant = big ? 4 : (int)(rnd.Next() * 4);
             if (variant == 0) f.Add(ProcMesh.Icosahedron(0.22f, 0), Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(1f, 0.8f, 1.3f)), MathUtil.Hex(0xb5652e));
             else if (variant == 1) f.Add(ProcMesh.Cylinder(0.3f, 0.3f, 0.18f, 3, 1, false, 0f, Mathf.PI / 2f), Vector3.zero, MathUtil.Hex(0xf2c94c));
             else if (variant == 2)
@@ -94,8 +102,7 @@ namespace Delvefolk
                 CharacterModel.MeshObject(food, "Aura", aura, Mats.Transparent, new Vector3(0, 0.1f, 0));
             }
             CharacterModel.MeshObject(food, "Plato", f.ToMesh("comidaBanquete"), Mats.Lit, Vector3.zero);
-            it.Mesh = root;
-            it.Food = food;
+            return root;
         }
 
         public override void Setup()

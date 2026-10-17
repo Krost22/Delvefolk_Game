@@ -193,10 +193,11 @@ namespace Delvefolk
                 return d.Name;
             }
             // Instantáneas
-            if (d.Heal > 0f) p.Heal(d.Heal);
+            // (sin dueño: equipo suelto de las pruebas de lógica)
+            if (d.Heal > 0f && p != null) p.Heal(d.Heal);
             if (d.Gold > 0f) Gold += (int)d.Gold;
-            if (d.Hurt > 0f && !p.Dead) { p.Hp = Mathf.Max(1f, p.Hp - d.Hurt); p.G.Ui.SetHealth(p.Index, p.Hp, p.MaxHp); }
-            var w = p.Weapon;
+            if (d.Hurt > 0f && p != null && !p.Dead) { p.Hp = Mathf.Max(1f, p.Hp - d.Hurt); p.G.Ui.SetHealth(p.Index, p.Hp, p.MaxHp); }
+            var w = p != null ? p.Weapon : null;
             if (d.Brittle && w != null && w.HasDurability && !w.Broken) w.Durability = Mathf.Max(1f, Mathf.Ceil(w.Durability / 2f));
             return d.Name;
         }

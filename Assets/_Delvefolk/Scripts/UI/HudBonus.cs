@@ -137,24 +137,18 @@ namespace Delvefolk
         }
 
         // ---------- Pantallas de introducción y resultados ----------
+        // Tarjeta de las pantallas del bonus: se activa ANTES de construir el contenido (TextMeshPro mide bien)
         RectTransform BonusCard()
         {
             if (!bonusScreen)
             {
                 bonusScreen = Overlay("PantallaBonus", 0.72f);
                 bonusCard = NewRect(bonusScreen, "Tarjeta");
-                bonusScreen.gameObject.SetActive(false);
+                Stretch(bonusCard);
             }
-            // Se rehace el contenido cada vez
+            bonusScreen.gameObject.SetActive(true);
             for (int i = bonusCard.childCount - 1; i >= 0; i--) Object.Destroy(bonusCard.GetChild(i).gameObject);
             return bonusCard;
-        }
-
-        RectTransform CardPanel(Vector2 size)
-        {
-            var parent = BonusCard();
-            var p = Panel(parent, "Panel", size);
-            return p;
         }
 
         TextMeshProUGUI Tag(RectTransform p, string text, int bg, int fg, float y)
@@ -172,61 +166,144 @@ namespace Delvefolk
             return t;
         }
 
+        // Texto que fluye: se coloca en y con su alto real y devuelve la y siguiente
+        float Flow(RectTransform p, string text, float px, float y, float width, Color? color = null, TextAlignmentOptions align = TextAlignmentOptions.Center, float gap = 8f)
+        {
+            var t = Body(p, text, px, y, 10f, color);
+            t.alignment = align;
+            float h = t.GetPreferredValues(text, width, 0f).y;
+            t.rectTransform.sizeDelta = new Vector2(-60, h);
+            return y + h + gap * Px;
+        }
+
+        RectTransform CardShell(float W)
+        {
+            BonusCard();
+            var border = MakeImage(bonusCard, "Panel", PanelBorder);
+            AsFrame(border, 3f * Px);
+            var bg = MakeImage(border.rectTransform, "Fondo", PanelBg);
+            Stretch(bg.rectTransform, 3f * Px);
+            // Tamaño provisional para medir el texto; al final se ajusta el alto
+            Anchor(border.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(W, 900 * Px));
+            return bg.rectTransform;
+        }
+
+        static void FitCard(RectTransform content, float W, float h)
+        {
+            var border = (RectTransform)content.parent;
+            border.sizeDelta = new Vector2(W, h);
+        }
+
+        // Introducción del desafío: viñetas ilustradas con los propios personajes y tres metas cortas;
+        // sin viñetas, las reglas completas en texto
         public void ShowBonusIntro(BonusInfo info, List<Player> players)
         {
-            ShowBonusIntroImpl(info, players);
-        }
-
-        // Texto de las reglas (siempre disponible; las viñetas ilustradas lo complementan)
-        void ShowBonusIntroImpl(BonusInfo info, List<Player> players)
-        {
-            bool illustrated = false;
-            IllustratedIntro(info, players, ref illustrated);
-            if (illustrated) return;
-            var p = CardPanel(new Vector2(720 * Px, 640 * Px));
-            Tag(p, "PISO BONUS", 0xc9a227, 0x1a120b, 22 * Px);
-            Title(p, info.Icon + " " + info.Name, 30, 52 * Px);
-            var tag = Body(p, info.Tagline, 16, 100 * Px, 30 * Px);
-            tag.alignment = TextAlignmentOptions.Center;
-            var sb = new System.Text.StringBuilder();
-            foreach (var r in info.Rules) sb.Append("• ").Append(FillKeys(r, players)).Append('\n');
-            var rules = Body(p, sb.ToString().TrimEnd(), 15, 140 * Px, 170 * Px);
-            rules.alignment = TextAlignmentOptions.TopLeft;
-            rules.lineSpacing = 8f;
-            string grid =
-                "<color=#7dd65b><b>🏆 Victoria</b></color>  " + FillKeys(info.Win, players) + "\n" +
-                "<color=#e2533b><b>☠️ Derrota</b></color>  " + FillKeys(info.Lose, players) + "\n" +
-                "<color=#ff9a2a><b>⚠️ Riesgo</b></color>  " + FillKeys(info.Risk, players) + "\n" +
-                "<color=#ffd36a><b>🎁 Recompensa</b></color>  " + FillKeys(info.Reward, players);
-            var g2 = Body(p, grid, 13, 320 * Px, 150 * Px);
-            g2.alignment = TextAlignmentOptions.TopLeft;
-            g2.lineSpacing = 10f;
-            if (!string.IsNullOrEmpty(info.Coop))
+            List<BonusArt.Panel> panels = null;
+            try
             {
-                var coop = Body(p, info.Coop, 14, 470 * Px, 40 * Px, TipColor);
-                coop.alignment = TextAlignmentOptions.Center;
+                var looks = new List<Dictionary<string, string>> { g.Loadouts[0].Cosmetics, g.Loadouts[1].Cosmetics };
+                panels = BonusArt.Panels(info.Id, looks);
             }
-            var small = Body(p, "Perder no acaba la partida: después seguiréis bajando.", 12, 520 * Px, 24 * Px, TipColor);
-            small.alignment = TextAlignmentOptions.Center;
-            bonusReady = Body(p, "", 15, 560 * Px, 40 * Px);
+            catch (System.Exception e) { Debug.LogWarning("Viñetas del bonus no disponibles: " + e.Message); panels = null; }
+            float W = (panels != null ? 900f : 720f) * Px;
+            var p = CardShell(W);
+            float inner = W - 60f - 6f * Px;
+            float y = 20 * Px;
+            Tag(p, "PISO BONUS", 0xc9a227, 0x1a120b, y);
+            y += 32 * Px;
+            Title(p, info.Icon + " " + info.Name, 30, y);
+            y += 30 * Px * 1.4f + 4 * Px;
+            y = Flow(p, info.Tagline, 16, y, inner, null, TextAlignmentOptions.Center, 10f);
+            var all = new System.Text.StringBuilder(info.Name + "\n");
+            if (panels != null)
+            {
+                int n = panels.Count;
+                float gap = 10 * Px, pw = (W - 56 * Px - gap * (n - 1)) / n, ph = pw * Illustrator.H / Illustrator.W;
+                float capH = 44 * Px;
+                for (int k = 0; k < n; k++)
+                {
+                    var pnl = panels[k];
+                    int bc = pnl.Mark == "ok" ? 0x5a9a3a : pnl.Mark == "warn" ? 0xc98a27 : pnl.Mark == "bad" ? 0xb33a2a : 0x6b5132;
+                    var fr = MakeImage(p, "Vineta" + (k + 1), MathUtil.Hex(bc));
+                    AsFrame(fr, 2 * Px);
+                    PlaceIn(fr.rectTransform, 25 * Px + k * (pw + gap), y, pw, ph + capH);
+                    var fbg = MakeImage(fr.rectTransform, "Fondo", new Color(0, 0, 0, 0.35f));
+                    Stretch(fbg.rectTransform, 2 * Px);
+                    var imgBg = MakeImage(fr.rectTransform, "FondoImagen", MathUtil.Hex(0x2a1f16));
+                    PlaceIn(imgBg.rectTransform, 2 * Px, 2 * Px, pw - 4 * Px, ph - 2 * Px);
+                    var raw = new GameObject("Imagen", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
+                    raw.transform.SetParent(imgBg.transform, false);
+                    raw.texture = pnl.Tex;
+                    raw.raycastTarget = false;
+                    Stretch(raw.rectTransform);
+                    // Número y marca (✔ ⚠ ✖)
+                    var num = MakeImage(fr.rectTransform, "Numero", new Color(0, 0, 0, 0.55f));
+                    PlaceIn(num.rectTransform, 8 * Px, 8 * Px, 22 * Px, 18 * Px);
+                    var nt = MakeText(num.rectTransform, "Texto", (k + 1).ToString(), 12, Fonts.Body, MathUtil.Hex(0xffe2a0));
+                    nt.fontStyle = FontStyles.Bold; Stretch(nt.rectTransform);
+                    if (pnl.Mark != null)
+                    {
+                        var mk = MakeImage(fr.rectTransform, "Marca", MathUtil.Hex(pnl.Mark == "ok" ? 0x4a9a3a : pnl.Mark == "warn" ? 0xd08a20 : 0xc0392b));
+                        mk.sprite = CircleSprite();
+                        PlaceIn(mk.rectTransform, pw - 34 * Px, 8 * Px, 26 * Px, 26 * Px);
+                        var mt = MakeText(mk.rectTransform, "Texto", pnl.Mark == "ok" ? "✔" : pnl.Mark == "warn" ? "⚠" : "✖", 15, Fonts.Body, Color.white);
+                        mt.fontStyle = FontStyles.Bold; Stretch(mt.rectTransform);
+                    }
+                    var cap = MakeText(fr.rectTransform, "Pie", FillKeys(pnl.Cap, players), 13, Fonts.Body, Ink);
+                    cap.fontStyle = FontStyles.Bold; cap.richText = true;
+                    cap.textWrappingMode = TextWrappingModes.Normal;
+                    PlaceIn(cap.rectTransform, 8 * Px, ph + 2 * Px, pw - 16 * Px, capH - 6 * Px);
+                    all.Append(pnl.Cap).Append('\n');
+                }
+                y += ph + capH + 12 * Px;
+                // Metas cortas
+                var goals = BonusArt.Get(info.Id).Goals();
+                string gl = "<color=#7dd65b>▌</color><b>🏆 " + goals[0] + "</b>     <color=#e2533b>▌</color><b>☠️ " + goals[1] + "</b>     <color=#ffd36a>▌</color><b>🎁 " + goals[2] + "</b>";
+                y = Flow(p, gl, 14, y, inner, null, TextAlignmentOptions.Center, 10f);
+                all.Append(gl).Append('\n');
+            }
+            else
+            {
+                var sb = new System.Text.StringBuilder();
+                foreach (var r in info.Rules) sb.Append("• ").Append(FillKeys(r, players)).Append('\n');
+                y = Flow(p, sb.ToString().TrimEnd(), 15, y, inner, null, TextAlignmentOptions.TopLeft, 12f);
+                string grid =
+                    "<color=#7dd65b><b>🏆 Victoria</b></color>  " + FillKeys(info.Win, players) + "\n" +
+                    "<color=#e2533b><b>☠️ Derrota</b></color>  " + FillKeys(info.Lose, players) + "\n" +
+                    "<color=#ff9a2a><b>⚠️ Riesgo</b></color>  " + FillKeys(info.Risk, players) + "\n" +
+                    "<color=#ffd36a><b>🎁 Recompensa</b></color>  " + FillKeys(info.Reward, players);
+                y = Flow(p, grid, 13, y, inner, null, TextAlignmentOptions.TopLeft, 10f);
+                if (!string.IsNullOrEmpty(info.Coop)) y = Flow(p, info.Coop, 14, y, inner, TipColor, TextAlignmentOptions.Center, 8f);
+                all.Append(sb).Append(grid);
+            }
+            y = Flow(p, "Perder no acaba la partida: después seguiréis bajando.", 12, y, inner, TipColor, TextAlignmentOptions.Center, 10f);
+            bonusReady = Body(p, "", 15, y, 30 * Px);
             bonusReady.alignment = TextAlignmentOptions.Center;
+            y += 40 * Px;
+            FitCard(p, W, y + 12 * Px);
             readyShown = null;
-            BonusCardText = info.Name + "\n" + sb + grid;
-            bonusScreen.gameObject.SetActive(true);
+            BonusCardText = all.ToString();
+            BonusIllustrated = panels != null;
         }
 
-        partial void IllustratedIntro(BonusInfo info, List<Player> players, ref bool shown);
+        public bool BonusIllustrated { get; private set; }
 
         public void ShowBonusResult(BonusChallenge ch, BonusFloorController.Result res, List<Player> players)
         {
             bool ok = res.Success;
-            var p = CardPanel(new Vector2(720 * Px, 520 * Px));
-            Tag(p, ok ? "¡DESAFÍO SUPERADO!" : "DESAFÍO FALLIDO", ok ? 0x7dd65b : 0xe2533b, ok ? 0x1a120b : 0xffffff, 22 * Px);
-            Title(p, ch.Info.Icon + " " + ch.Info.Name, 30, 52 * Px);
-            var reason = Body(p, res.Reason ?? "", 14, 100 * Px, 24 * Px, TipColor);
-            reason.alignment = TextAlignmentOptions.Center;
-            float colW = (720 * Px - 80 * Px) / Mathf.Max(1, players.Count);
+            float W = 720 * Px;
+            var p = CardShell(W);
+            float inner = W - 60f - 6f * Px;
+            float y = 20 * Px;
+            Tag(p, ok ? "¡DESAFÍO SUPERADO!" : "DESAFÍO FALLIDO", ok ? 0x7dd65b : 0xe2533b, ok ? 0x1a120b : 0xffffff, y);
+            y += 32 * Px;
+            Title(p, ch.Info.Icon + " " + ch.Info.Name, 30, y);
+            y += 30 * Px * 1.4f + 4 * Px;
+            y = Flow(p, res.Reason ?? "", 14, y, inner, TipColor, TextAlignmentOptions.Center, 10f);
+            float colW = (W - 80 * Px) / Mathf.Max(1, players.Count);
             var all = new System.Text.StringBuilder();
+            float maxH = 0f;
+            var cards = new List<Image>();
             for (int i = 0; i < players.Count; i++)
             {
                 var pl = players[i];
@@ -244,19 +321,22 @@ namespace Delvefolk
                 else sb.Append("<i><color=#8a7a62>Sin recompensa esta vez</color></i>");
                 var box = MakeImage(p, "Jugador" + (i + 1), MathUtil.Hex(pl.Look.Ring));
                 AsFrame(box, 2 * Px);
-                PlaceIn(box.rectTransform, 40 * Px + i * colW, 140 * Px, colW - 10 * Px, 230 * Px);
-                var t = MakeText(box.rectTransform, "Texto", sb.ToString(), 14, Fonts.Body, Ink);
+                var t = MakeText(box.rectTransform, "Texto", sb.ToString().TrimEnd(), 14, Fonts.Body, Ink);
                 t.richText = true; t.textWrappingMode = TextWrappingModes.Normal; t.alignment = TextAlignmentOptions.TopLeft;
                 Stretch(t.rectTransform, 10 * Px);
+                maxH = Mathf.Max(maxH, t.GetPreferredValues(t.text, colW - 30 * Px, 0f).y + 22 * Px);
+                cards.Add(box);
                 all.Append(sb).Append('\n');
             }
-            var small = Body(p, "Quien cayó se levanta con " + BonusConfig.ReviveHp + " de vida. Seguís bajando.", 12, 390 * Px, 24 * Px, TipColor);
-            small.alignment = TextAlignmentOptions.Center;
-            bonusReady = Body(p, "", 15, 430 * Px, 40 * Px);
+            for (int i = 0; i < cards.Count; i++) PlaceIn(cards[i].rectTransform, 40 * Px + i * colW, y, colW - 10 * Px, maxH);
+            y += maxH + 14 * Px;
+            y = Flow(p, "Quien cayó se levanta con " + BonusConfig.ReviveHp + " de vida. Seguís bajando.", 12, y, inner, TipColor, TextAlignmentOptions.Center, 10f);
+            bonusReady = Body(p, "", 15, y, 30 * Px);
             bonusReady.alignment = TextAlignmentOptions.Center;
+            y += 40 * Px;
+            FitCard(p, W, y + 12 * Px);
             readyShown = null;
             BonusCardText = all.ToString();
-            bonusScreen.gameObject.SetActive(true);
         }
 
         public void UpdateBonusOverlay(HashSet<int> confirmed, List<Player> players, float timeLeft)

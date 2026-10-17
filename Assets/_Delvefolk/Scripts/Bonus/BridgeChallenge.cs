@@ -35,6 +35,9 @@ namespace Delvefolk
         public readonly List<Finisher> Finished = new List<Finisher>();
         readonly List<Fall> falling = new List<Fall>();
         public int Collapsed;
+        public int Cols { get { return cols; } }
+        public int GridRows { get { return gridRows; } }
+        public int FallingCount { get { return falling.Count; } }
         readonly MaterialPropertyBlock mpb = new MaterialPropertyBlock();
         static Mesh pipMesh, crackMesh;
 
@@ -152,7 +155,7 @@ namespace Delvefolk
         }
 
         // Reparto de losas frágiles con ruta segura garantizada (sin depender solo del azar)
-        void AssignFragile()
+        public void AssignFragile()
         {
             var fr = BonusConfig.Bridge.FragileByDistance;
             for (int tries = 0; tries < 200; tries++)

@@ -226,8 +226,8 @@ namespace Delvefolk.Tests
             var p2 = G.Players[1];
             p2.Hurt(999, p2.X, p2.Z, 0, new HurtOpts { Raw = true, Pierce = true });
             Assert.IsTrue(G.Ui.PanelDowned(1));
+            // Al reanimarle, el panel deja de decir "DERRIBADO" (corrección respecto al original)
             p2.Revive(40f);
-            G.Ui.SetDowned(1, false);
             Assert.IsFalse(G.Ui.PanelDowned(1));
             yield break;
         }

@@ -81,7 +81,8 @@ namespace Delvefolk
             if (!flagPole) flagPole = new MeshBuilder().Add(ProcMesh.Cylinder(0.03f, 0.03f, 0.9f, 4), new Vector3(0, 0.45f, 0), MathUtil.Hex(0x5a3a22)).ToMesh("mastil");
             var root = new GameObject("Bandera").transform;
             root.SetParent(parent, false);
-            root.localRotation = Quaternion.Euler(0, 45f, 0);
+            // rotation.y = π/4 del web; la tela es plana (z = 0), así que con el eje z invertido el ángulo pasa a −π/4
+            root.localRotation = Quaternion.Euler(0, -45f, 0);
             Obj(root, "Mastil", flagPole, Mats.Lit, Vector3.zero);
             var tri = new MeshData();
             tri.Add(new Vector3(0, 0.9f, 0), Vector3.forward, Vector2.zero);

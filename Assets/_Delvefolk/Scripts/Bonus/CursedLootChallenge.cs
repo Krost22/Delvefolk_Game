@@ -165,6 +165,8 @@ namespace Delvefolk
         }
 
         public int OpensLeft(Player p) { return Participant(p).Score; }
+        public float OpenSeconds { get { return OpenTime; } }
+        public float ExamineSeconds { get { return ExamineTime; } }
 
         public Item Nearest(Player p)
         {

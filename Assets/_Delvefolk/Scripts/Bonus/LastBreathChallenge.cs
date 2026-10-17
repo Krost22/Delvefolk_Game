@@ -22,6 +22,7 @@ namespace Delvefolk
         const int W = 13, H = 13;
         readonly List<Vector2Int> tiles = new List<Vector2Int>();
         public HazardFloor Hazard;
+        public List<Vector2Int> Tiles { get { return tiles; } }
         Transform zoneGroup;
         readonly List<MeshRenderer> zoneR = new List<MeshRenderer>();
         public float TimeLeft, PhaseT, WarnLeft, RollerT;

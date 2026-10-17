@@ -10,7 +10,7 @@ namespace Delvefolk
     {
         public struct Claim { public bool Ok, Dup; public string Text; public RewardDef Def; }
         public struct Granted { public string Icon, Text, Category, Note; }
-        sealed class LogEntry { public string Key, Reward, Text, Note; public int Player; }
+        public sealed class LogEntry { public string Key, Reward, Text, Note; public int Player; }
         public struct PlanItem { public Player Player; public string Reward, Key, Note; }
 
         readonly Game g;
@@ -24,6 +24,7 @@ namespace Delvefolk
         public string Key(string source, Player p) { return g.RunId + "|" + source + "|" + p.Index; }
         public bool Claimed(string source, Player p) { return ledger.Contains(Key(source, p)); }
         public int LedgerCount { get { return ledger.Count; } }
+        public IReadOnlyList<LogEntry> Log { get { return log; } }
 
         public Claim ClaimReward(Player player, string rewardId, string source, string note = "", bool silent = false)
         {

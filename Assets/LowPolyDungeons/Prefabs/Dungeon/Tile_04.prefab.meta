@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 51d27d240c0214d4fb8e2eaadc3e8efe
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 176350
+  packageName: Low Poly Dungeons
+  packageVersion: 1.25
+  assetPath: Assets/LowPolyDungeons/Prefabs/Dungeon/Tile_04.prefab
+  uploadId: 687725

@@ -308,7 +308,7 @@ namespace Delvefolk
 
         float AggroDist(Player p)
         {
-            return MathUtil.Hypot(p.X - X, p.Z - Z) - (p.Gear.Has("item_compass") ? GearConfigShim.CompassAggroRange : 0f);
+            return MathUtil.Hypot(p.X - X, p.Z - Z) - (p.Gear.Has("item_compass") ? GearConfig.CompassAggroRange : 0f);
         }
 
         // Objetivo: el jugador más cercano, con algo de "memoria" para no cambiar a cada momento
@@ -541,5 +541,4 @@ namespace Delvefolk
     }
 
     // La brújula maldita llega con el equipo (fase 6): de momento solo su alcance
-    public static class GearConfigShim { public const float CompassAggroRange = 4f; }
 }

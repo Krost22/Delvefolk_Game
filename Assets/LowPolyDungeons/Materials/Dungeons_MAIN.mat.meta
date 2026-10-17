@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: d08a0d1aba6bbce4b815d4bd76548e32
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 176350
+  packageName: Low Poly Dungeons
+  packageVersion: 1.25
+  assetPath: Assets/LowPolyDungeons/Materials/Dungeons_MAIN.mat
+  uploadId: 687725

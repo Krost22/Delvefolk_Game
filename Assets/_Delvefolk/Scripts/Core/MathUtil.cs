@@ -104,7 +104,7 @@ namespace Delvefolk
         {
             for (int i = arr.Count - 1; i > 0; i--)
             {
-                int j = (int)Math.Floor(Next() * (i + 1));
+                int j = (int)Math.Floor(NextDouble() * (i + 1));   // en doble precisión, como el original
                 T tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
             }
         }

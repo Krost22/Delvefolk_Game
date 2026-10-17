@@ -208,6 +208,7 @@ namespace Delvefolk
                 if (showHead)
                 {
                     PlaceAt(u.Head, new Vector3(pl.X, top - 0.75f, pl.Z));
+                    u.ArmorK = pl.Gear.ArmorFraction();
                     float sk = Mathf.Max(0f, pl.Stamina) / JumpConfig.Stamina;
                     string st = Mathf.RoundToInt(u.HpK * 200) + "|" + Mathf.RoundToInt(u.Ghost * 200) + "|" + Mathf.RoundToInt(u.ArmorK * 100) + "|" + Mathf.RoundToInt(sk * 100) + "|" + (pl.Spectator ? 1 : 0);
                     if (st != u.State)

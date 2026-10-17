@@ -297,6 +297,7 @@ namespace Delvefolk
         public void ClearFloats()
         {
             foreach (var f in floaters) { f.Active = false; f.T.gameObject.SetActive(false); }
+            ClearLabels();
         }
 
         // Proyecta un punto del mundo al lienzo; false si queda detrás de la cámara
@@ -398,6 +399,7 @@ namespace Delvefolk
                 hurtT -= dt;
                 var c = hurtImg.color; c.a = Mathf.Max(0f, hurtT / 0.25f) * 0.55f; hurtImg.color = c;
             }
+            UpdateLabels();
             UpdateExtra(dt);
         }
 

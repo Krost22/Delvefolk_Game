@@ -15,6 +15,7 @@ namespace Delvefolk.Tests
         [UnityTest]
         public IEnumerator MVP_EscobaGolpeaSlimePuasYBajarAlPiso2()
         {
+            G.Settings.BonusMode = "never";   // como T.start(..., { bonusMode: 'never' }) del original
             StartRun(1);
             var p = P1;
             var broom = G.Pickups.First(k => k.Item.Id == "broom");
@@ -364,6 +365,7 @@ namespace Delvefolk.Tests
         [UnityTest]
         public IEnumerator Victoria_AlLlegarAlPiso3YLuegoPisosEspejo()
         {
+            G.Settings.BonusMode = "never";
             G.Start(1); Step(2);
             G.LoadFloor(2, G.CollectCarry()); Step(2);
             var p = P1;

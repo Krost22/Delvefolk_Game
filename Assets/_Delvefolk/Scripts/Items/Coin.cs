@@ -111,6 +111,7 @@ namespace Delvefolk
             p.Gear.Gold += 1;
             g.Stats.Coins++;
             g.Ui.SetGold(p.Index, p.Gear.Gold);
+            g.Ui.CoinPop(p.Index);
             g.Audio.Play("coin");
             g.Effects.Burst(X, 1.1f, Z, BurstOpts.Of(3, 0xffe08a, 1.5f, 2f, 0.06f));
             Remove();

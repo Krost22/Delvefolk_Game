@@ -25,7 +25,7 @@ namespace Delvefolk
             // Habilidades exclusivas: si J2 trae la misma que J1, se le asigna la siguiente libre
             if (Settings.ExclusiveAbilities && Loadouts[1].Ability == p1.Ability.Id)
             {
-                foreach (var id in AbilityController.Order) if (id != p1.Ability.Id) { Loadouts[1].SetAbility(id); break; }
+                foreach (var id in Abilities.Order) if (id != p1.Ability.Id) { Loadouts[1].SetAbility(id); break; }
             }
             var pos = FreeSpotNear(p1.X, p1.Z);
             var p2 = new Player(this, pos.x, pos.y, 1);

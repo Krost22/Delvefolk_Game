@@ -17,31 +17,45 @@ namespace Delvefolk
             public string head, body, acc, palette, material, fx;
         }
 
-        public PlayerLoadout(int index)
+        public PlayerLoadout(int index) : this(index, null, null) { }
+
+        // Con datos guardados: lo desconocido vuelve a lo de por defecto (habilidad y piezas)
+        public PlayerLoadout(int index, string ability, Dictionary<string, string> cosmetics)
         {
             Index = index;
-            Ability = DefaultAbility(index);
-            Cosmetics = Delvefolk.Cosmetics.Defaults(index);
+            Ability = Abilities.Get(ability) != null ? ability : DefaultAbility(index);
+            Cosmetics = Delvefolk.Cosmetics.Validate(cosmetics, index, null);
         }
 
-        public static string DefaultAbility(int index) { return index == 0 ? "quake" : "shout"; }
+        public static string DefaultAbility(int index) { return Abilities.DefaultFor(index); }
 
-        public void SetAbility(string id) { if (!string.IsNullOrEmpty(id)) Ability = id; }
+        // Una sola habilidad equipada: elegir otra sustituye a la anterior
+        public bool SetAbility(string id)
+        {
+            if (Abilities.Get(id) == null) return false;
+            Ability = id;
+            return true;
+        }
+
+        // Cambia una pieza cosmética; devuelve las piezas retiradas por incompatibles (p. ej. capa + mochila)
+        public List<Delvefolk.Cosmetics.Removed> SetCosmetic(string slot, string id)
+        {
+            var next = new Dictionary<string, string>(Cosmetics);
+            next[slot] = id;
+            var removed = new List<Delvefolk.Cosmetics.Removed>();
+            Cosmetics = Delvefolk.Cosmetics.Validate(next, Index, slot, removed);
+            return removed;
+        }
 
         public static PlayerLoadout Load(int index)
         {
-            var l = new PlayerLoadout(index);
             var s = Storage.Get<Saved>("loadout." + index, null);
-            if (s != null)
+            if (s == null) return new PlayerLoadout(index);
+            var sel = new Dictionary<string, string>
             {
-                if (!string.IsNullOrEmpty(s.ability)) l.Ability = s.ability;
-                var sel = new Dictionary<string, string>
-                {
-                    { "head", s.head }, { "body", s.body }, { "acc", s.acc }, { "palette", s.palette }, { "material", s.material }, { "fx", s.fx },
-                };
-                l.Cosmetics = Delvefolk.Cosmetics.Validate(sel, index, null);
-            }
-            return l;
+                { "head", s.head }, { "body", s.body }, { "acc", s.acc }, { "palette", s.palette }, { "material", s.material }, { "fx", s.fx },
+            };
+            return new PlayerLoadout(index, s.ability, sel);
         }
 
         public void Save()

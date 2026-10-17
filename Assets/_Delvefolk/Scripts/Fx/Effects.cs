@@ -70,6 +70,7 @@ namespace Delvefolk
         public readonly Light FlashLight;
         float flashT, flashMax, flashDur;
         readonly Rng rnd;
+        readonly int layer;   // capa de todo lo que crea (la vista previa de la sala usa la suya)
 
         static readonly Vector3[] Corners =
         {
@@ -78,11 +79,13 @@ namespace Delvefolk
         };
         static readonly int[] CubeTris = { 0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 3, 7, 6, 3, 6, 2, 0, 4, 7, 0, 7, 3, 1, 2, 6, 1, 6, 5 };
 
-        public Effects(Transform parent, Rng random)
+        public Effects(Transform parent, Rng random, int layer = 0)
         {
             rnd = random;
+            this.layer = layer;
             root = new GameObject("Efectos").transform;
             root.SetParent(parent, false);
+            root.gameObject.layer = layer;
             mesh = new Mesh { name = "particulas" };
             mesh.MarkDynamic();
             var tris = new int[Max * 36];
@@ -95,6 +98,7 @@ namespace Delvefolk
             mesh.bounds = new Bounds(Vector3.zero, Vector3.one * 10000f);
             var go = new GameObject("Particulas", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(root, false);
+            go.layer = layer;
             go.GetComponent<MeshFilter>().sharedMesh = mesh;
             var mr = go.GetComponent<MeshRenderer>();
             mr.sharedMaterial = Mats.Unlit;
@@ -105,6 +109,7 @@ namespace Delvefolk
 
             var lg = new GameObject("Destello");
             lg.transform.SetParent(root, false);
+            lg.layer = layer;
             FlashLight = lg.AddComponent<Light>();
             FlashLight.type = LightType.Point;
             FlashLight.range = 12f;
@@ -173,6 +178,7 @@ namespace Delvefolk
                 if (!fadings[i].Active && fadings[i].Ring == ring) return fadings[i];
             var go = new GameObject(ring ? "Anillo" : "Arco", typeof(MeshFilter), typeof(MeshRenderer));
             go.transform.SetParent(root, false);
+            go.layer = layer;
             var f = new Fading { Tr = go.transform, R = go.GetComponent<MeshRenderer>(), F = go.GetComponent<MeshFilter>(), Ring = ring };
             NoShadows(f.R);
             fadings.Add(f);
@@ -191,7 +197,7 @@ namespace Delvefolk
             var f = Take(true);
             f.F.sharedMesh = ringMesh;
             f.R.sharedMaterial = Mats.Transparent;
-            f.Tr.SetPositionAndRotation(new Vector3(x, o.Y != 0 ? o.Y : 0.06f, z), Quaternion.AngleAxis(-90f, Vector3.right));
+            f.Tr.SetLocalPositionAndRotation(new Vector3(x, o.Y != 0 ? o.Y : 0.06f, z), Quaternion.AngleAxis(-90f, Vector3.right));
             f.T = 0f; f.Life = o.Life > 0 ? o.Life : 0.35f;
             f.R0 = o.R0 > 0 ? o.R0 : 0.3f; f.R1 = o.Radius > 0 ? o.Radius : 2f;
             f.BaseOpacity = 0.8f;
@@ -215,7 +221,7 @@ namespace Delvefolk
             var f = Take(false);
             f.F.sharedMesh = m;
             f.R.sharedMaterial = Mats.Additive;
-            f.Tr.SetPositionAndRotation(new Vector3(x, 0.08f, z), ProcMesh.EulerXYZ(-Mathf.PI / 2f, 0f, facing));
+            f.Tr.SetLocalPositionAndRotation(new Vector3(x, 0.08f, z), ProcMesh.EulerXYZ(-Mathf.PI / 2f, 0f, facing));
             f.Tr.localScale = Vector3.one;
             f.T = 0f; f.Life = life; f.BaseOpacity = 0.5f;
             f.Col = MathUtil.Hex(color);
@@ -231,7 +237,7 @@ namespace Delvefolk
             var f = Take(false);
             f.F.sharedMesh = tracerMesh;
             f.R.sharedMaterial = Mats.Additive;
-            f.Tr.SetPositionAndRotation(new Vector3((x1 + x2) / 2f, y, (z1 + z2) / 2f), Quaternion.Euler(0f, Mathf.Atan2(x2 - x1, z2 - z1) * Mathf.Rad2Deg, 0f));
+            f.Tr.SetLocalPositionAndRotation(new Vector3((x1 + x2) / 2f, y, (z1 + z2) / 2f), Quaternion.Euler(0f, Mathf.Atan2(x2 - x1, z2 - z1) * Mathf.Rad2Deg, 0f));
             f.Tr.localScale = new Vector3(1f, 1f, len);
             f.T = 0f; f.Life = life; f.BaseOpacity = 0.9f;
             f.Col = MathUtil.Hex(color);
@@ -243,7 +249,7 @@ namespace Delvefolk
         public void Flash(float x, float y, float z, int color = 0xffcc88, float intensity = 3f, float dur = 0.12f)
         {
             FlashLight.color = MathUtil.Hex(color);
-            FlashLight.transform.position = new Vector3(x, y, z);
+            FlashLight.transform.localPosition = new Vector3(x, y, z);
             flashMax = intensity * Lighting.PointScale; flashDur = dur; flashT = dur;
             FlashLight.intensity = flashMax;
         }

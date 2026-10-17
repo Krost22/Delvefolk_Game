@@ -6,12 +6,10 @@ namespace Delvefolk
     // El frame de la simulación, en el orden fijo de Game.frame del original
     public sealed partial class Game
     {
-        static readonly string[] TitleStart1 = { "Space", "GP0:A" };
-        static readonly string[] TitleStart2 = { "Enter", "NumpadEnter", "GP1:A" };
         readonly List<Vector2Int> navSources = new List<Vector2Int>();
         readonly List<Player> focusBuf = new List<Player>();
 
-        // Empezar partida (de momento sin sala de preparación: llega en la fase de presentación)
+        // Empezar partida (desde la sala de preparación, o directamente en las pruebas)
         public void Start(int numPlayers)
         {
             NumPlayers = numPlayers;
@@ -33,14 +31,10 @@ namespace Delvefolk
             {
                 if (State == GameState.Title)
                 {
-                    bool startHandled = false;
-                    TitleInput(ref startHandled);
-                    if (!startHandled)
-                    {
-                        if (Input.ConsumeAny(TitleStart1)) { Start(1); Input.EndFrame(); handled = true; return; }
-                        if (Input.ConsumeAny(TitleStart2)) { Start(2); Input.EndFrame(); handled = true; return; }
-                    }
-                    else { Input.EndFrame(); handled = true; return; }
+                    // Abrir la sala acaba el frame (como el original)
+                    bool opened = false;
+                    TitleInput(ref opened);
+                    if (opened) { Input.EndFrame(); handled = true; return; }
                 }
                 else
                 {

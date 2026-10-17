@@ -143,10 +143,25 @@ namespace Delvefolk
             return t;
         }
 
+        // Contorno de texto con un material compartido por (fuente, color, grosor): sin una instancia de
+        // material por texto y válido también en objetos que aún no se han activado
+        static readonly Dictionary<string, Material> outlineMats = new Dictionary<string, Material>();
+
         public static void Outline(TMP_Text t, Color c, float width)
         {
-            t.outlineColor = c;
-            t.outlineWidth = width;
+            var font = t.font;
+            if (!font || !font.material) return;
+            string key = font.GetHashCode() + "|" + ColorUtility.ToHtmlStringRGBA(c) + "|" + Mathf.RoundToInt(width * 1000f);
+            Material m;
+            if (!outlineMats.TryGetValue(key, out m) || !m)
+            {
+                m = new Material(font.material) { name = font.name + " contorno " + key };
+                m.SetColor(ShaderUtilities.ID_OutlineColor, c);
+                m.SetFloat(ShaderUtilities.ID_OutlineWidth, width);
+                m.EnableKeyword(ShaderUtilities.Keyword_Outline);
+                outlineMats[key] = m;
+            }
+            t.fontSharedMaterial = m;
         }
 
         public static void Stretch(RectTransform r, float inset = 0f)
@@ -161,6 +176,41 @@ namespace Delvefolk
             r.pivot = new Vector2(0.5f, 0.5f);
             r.anchoredPosition = pos;
             r.sizeDelta = size;
+        }
+
+        // Marco de 9 cortes (borde opaco de 2 px y centro transparente) para bordes de paneles
+        static Sprite frameSprite;
+        public static Sprite FrameSprite()
+        {
+            if (frameSprite) return frameSprite;
+            const int s = 8;
+            var tex = new Texture2D(s, s, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Point, name = "marco" };
+            var px = new Color32[s * s];
+            for (int y = 0; y < s; y++)
+                for (int x = 0; x < s; x++)
+                    px[y * s + x] = (x < 2 || y < 2 || x >= s - 2 || y >= s - 2) ? new Color32(255, 255, 255, 255) : new Color32(255, 255, 255, 0);
+            tex.SetPixels32(px); tex.Apply();
+            frameSprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(3, 3, 3, 3));
+            return frameSprite;
+        }
+
+        // Convierte una imagen en marco: el borde mide "width" unidades del lienzo
+        public static void AsFrame(Image img, float width)
+        {
+            img.sprite = FrameSprite();
+            img.type = Image.Type.Sliced;
+            img.fillCenter = false;
+            // El corte mide 3 px del sprite y 2 de ellos son opacos
+            img.pixelsPerUnitMultiplier = 2f / width;
+        }
+
+        // Cambia el pivote al centro sin mover el rectángulo (para escalar desde el centro, como el CSS)
+        public static void CenterPivot(RectTransform r)
+        {
+            var size = r.rect.size;
+            var d = new Vector2(0.5f, 0.5f) - r.pivot;
+            r.pivot = new Vector2(0.5f, 0.5f);
+            r.anchoredPosition += new Vector2(d.x * size.x, d.y * size.y);
         }
 
         static Sprite vignetteSprite;
@@ -257,7 +307,8 @@ namespace Delvefolk
             var sp = cam.WorldToScreenPoint(world);
             if (sp.z < 0) { r.anchoredPosition = new Vector2(-10000, -10000); return false; }
             Vector2 local;
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, sp, null, out local);
+            var uiCam = Canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Canvas.worldCamera;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(Root, sp, uiCam, out local);
             r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
             r.anchoredPosition = local;
             return true;
@@ -288,11 +339,24 @@ namespace Delvefolk
             bannerSub.gameObject.SetActive(!string.IsNullOrEmpty(sub));
         }
 
-        public void SetFloor(string label)
+        // Distintivo "PISO n" (n puede ser BONUS, TIENDA o JEFE, con su color)
+        public string FloorShown { get { return floorShown; } }
+        public void SetFloor(string n)
         {
-            if (floorShown == label) return;
-            floorShown = label;
-            floorBadge.text = label;
+            if (floorShown == n) return;
+            floorShown = n;
+            int border = 0x6b5132, label = 0xb39a72;
+            if (n == "BONUS") { border = 0xc9a227; label = 0xffd36a; }
+            else if (n == "TIENDA") { border = 0x7dd65b; label = 0x9fd36a; }
+            else if (n == "JEFE") { border = 0xe2533b; label = 0xff9a6a; }
+            // 13 y 20 px del CSS a la escala del lienzo (×1.3)
+            floorBadge.text = "<size=17><color=#" + label.ToString("x6") + "><cspace=0.3em>PISO</cspace></color></size> <size=26><color=#ffe2a0>" + n + "</color></size>";
+            if (floorBox)
+            {
+                floorBox.color = MathUtil.Hex(border);
+                var pref = floorBadge.GetPreferredValues(floorBadge.text);
+                floorBox.rectTransform.sizeDelta = new Vector2(pref.x + 32 * Px, pref.y + 10 * Px);
+            }
         }
 
         public void Fade(bool on) { fadeTarget = on ? 1f : 0f; }

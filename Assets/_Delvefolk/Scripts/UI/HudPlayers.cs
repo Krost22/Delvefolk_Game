@@ -76,6 +76,7 @@ namespace Delvefolk
             Stretch(u.PromptText.rectTransform, 6);
             u.PromptText.richText = true;
             u.Prompt.gameObject.SetActive(false);
+            u.Head.gameObject.SetActive(false);   // hasta que haya partida (como la clase "on" del original)
             return u;
         }
 
@@ -166,7 +167,7 @@ namespace Delvefolk
 
         public float PlayerBarOf(int i) { return heads[i].BarK; }
         // Estado de la vida sobre la cabeza (pruebas)
-        public bool HeadShown(int i) { return heads[i].Head.gameObject.activeSelf; }
+        public bool HeadShown(int i) { return heads[i].Head.gameObject.activeInHierarchy; }
         public float HeadFill(int i) { return heads[i].HpFill.fillAmount; }
         public string HeadName(int i) { return heads[i].Name.text; }
 

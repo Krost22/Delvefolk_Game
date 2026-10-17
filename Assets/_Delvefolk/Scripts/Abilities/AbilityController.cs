@@ -4,9 +4,6 @@ namespace Delvefolk
     // Las 7 habilidades llegan en la fase 5; mientras tanto el jugador no tiene ninguna activa.
     public sealed partial class AbilityController
     {
-        // Orden del registro de habilidades del original (DF.Abilities.order)
-        public static readonly string[] Order = { "quake", "blast", "charge", "shout", "swap", "magnet", "guard" };
-
         public readonly Player Player;
         public string Id = "quake";
         public float Cd;
@@ -15,11 +12,14 @@ namespace Delvefolk
         public AbilityController(Player player, string id)
         {
             Player = player;
-            Id = id ?? "quake";
+            Id = Abilities.Get(id) != null ? id : Abilities.DefaultFor(player != null ? player.Index : 0);
         }
 
+        public AbilityDef Def { get { return Abilities.Get(Id); } }
         public bool Active { get { return IsActive(); } }
         public bool Ready { get { return Cd <= 0f && !Active; } }
+        // Fracción del enfriamiento que queda (1 recién usada, 0 lista): relleno circular del panel
+        public float CooldownK { get { var d = Def; return d == null || d.Cooldown <= 0f ? 0f : UnityEngine.Mathf.Clamp01(Cd / d.Cooldown); } }
         // Banderas de la habilidad activa (Terremoto bloquea el movimiento; Último Recurso protege)
         public bool LocksMovement { get { bool v = false; LocksMovementImpl(ref v); return v; } }
         public float DamageTakenMult { get { float v = 1f; DamageTakenMultImpl(ref v); return v; } }

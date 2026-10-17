@@ -49,6 +49,20 @@ namespace Delvefolk
         public bool Update(float dt) { bool changed = false; UpdateImpl(dt, ref changed); return changed; }
         partial void UpdateImpl(float dt, ref bool changed);
 
+        // Lo que enseña el panel de EQUIPO: armadura (icono y fracción que le queda) y fichas de objetos y
+        // mejoras (texto enriquecido). Sin armadura, armorIcon queda a null.
+        public void HudInfo(out string armorIcon, out float armorK, out string chips)
+        {
+            armorIcon = null; armorK = 0f; chips = "";
+            HudInfoImpl(ref armorIcon, ref armorK, ref chips);
+        }
+
+        partial void HudInfoImpl(ref string armorIcon, ref float armorK, ref string chips);
+
+        // ¿Hay mejoras con cuenta atrás? (el panel las refresca una vez por segundo)
+        public bool HasTimedBuffs { get { bool v = false; HasTimedBuffsImpl(ref v); return v; } }
+        partial void HasTimedBuffsImpl(ref bool v);
+
         public void RefreshVisual(CharacterParts parts) { RefreshVisualImpl(parts); }
         partial void RefreshVisualImpl(CharacterParts parts);
 

@@ -54,7 +54,11 @@ namespace Delvefolk
             cam.farClipPlane = 140f;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = MathUtil.Hex(0x050407);
+            cam.cullingMask = ~(1 << CharacterPreview.Layer);   // la vista previa de la sala tiene su propia cámara
             camGo.AddComponent<AudioListener>();
+            // Sonidos sintetizados al arrancar; el mezclador va junto al oyente
+            AudioSynth.Prewarm();
+            Audio.Attach(camGo);
             var data = camGo.AddComponent<UniversalAdditionalCameraData>();
             data.renderPostProcessing = false;
             data.antialiasing = AntialiasingMode.FastApproximateAntialiasing;
@@ -91,8 +95,11 @@ namespace Delvefolk
 
         partial void OnDispose()
         {
+            DisposeScreens();
             ClearFloor();
         }
+
+        partial void DisposeScreens();
 
         partial void OnFade(bool on) { if (Ui != null) Ui.Fade(on); }
         partial void OnToast(string text, float seconds) { if (Ui != null) Ui.Toast(text, seconds); }
@@ -191,7 +198,7 @@ namespace Delvefolk
             CameraCtl.SnapTo(c.x, c.y);
             View.PrimeLights(Players[0].X, Players[0].Z);
             View.UpdateOcclusion(10f, PlayerPoints(), CameraCtl.Yaw);
-            Ui.SetFloor(InBonus ? "BONUS" : InShop ? "TIENDA" : InBoss ? "JEFE" : "PISO " + n);
+            Ui.SetFloor(InBonus ? "BONUS" : InShop ? "TIENDA" : InBoss ? "JEFE" : n.ToString());
             if (InBonus) Ui.ClearToast();
             if (!opts.Preview && !InBonus)
             {

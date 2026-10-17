@@ -7,7 +7,8 @@ namespace Delvefolk
     // Cualquier fallo se ignora y el juego sigue con los valores por defecto.
     public static class Storage
     {
-        const string Prefix = "delvefolk.";
+        // Las pruebas usan su propio prefijo para no tocar la selección guardada del jugador
+        public static string Prefix = "delvefolk.";
         // Las pruebas pueden desactivarla para no tocar las preferencias reales del jugador
         public static bool Enabled = true;
 

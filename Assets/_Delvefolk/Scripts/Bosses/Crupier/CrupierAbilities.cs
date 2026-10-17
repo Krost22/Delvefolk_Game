@@ -140,7 +140,7 @@ namespace Delvefolk
             ClearTables();
         }
 
-        public void Destroy() { ClearAll(); Room.Destroy(); }
+        public void Destroy() { ClearAll(); }   // la sala (y sus cuerpos) dura lo que el piso
 
         // Sitios libres dentro de la arena: suelo normal, lejos de jugadores, del jefe, de mesas y entre sí
         public List<Vector2> FreeSpots(int n, float fromPlayers, Entity avoid, float fromAvoid)

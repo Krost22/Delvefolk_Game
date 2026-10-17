@@ -38,6 +38,7 @@ namespace Delvefolk
 
         // ---------- Alfombras: qué casillas son "rojas" ----------
         float EX { get { return Grid.X(Cx); } }
+        public Vector3 Center { get { return new Vector3(EX, 0f, EZ); } }
         float EZ { get { return Grid.Z(Cz); } }
 
         // Pasillos de alfombra (casillas inclusivas): sur hasta la entrada, norte hasta el trono y a los lados

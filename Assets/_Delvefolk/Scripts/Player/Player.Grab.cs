@@ -64,7 +64,7 @@ namespace Delvefolk
         }
 
         partial void ReleaseCarriedImpl(float place);
-        void ReleaseCarriedForGrab() { if (Carrying != null) ReleaseCarriedImpl(1f); }
+        void ReleaseCarriedForGrab() { if (Carrying != null) ReleaseCarriedImpl(1f); DropTnt(1f); }
 
         partial void UpdateGrabbed(float dt)
         {
@@ -180,6 +180,7 @@ namespace Delvefolk
         partial void OnDieImpl()
         {
             if (Carrying != null) ReleaseCarriedImpl(2f);
+            DropTnt(2f);
             Eating = null;
             Thrown = null;
             var gb = GrabbedBy as IGrabHolder;

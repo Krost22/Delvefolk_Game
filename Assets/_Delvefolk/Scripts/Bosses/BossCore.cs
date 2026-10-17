@@ -427,7 +427,8 @@ namespace Delvefolk
         {
             var bf = g.BossFloor;
             int np = Mathf.Max(1, g.Players.Count);
-            MaxHp = Hp = MathUtil.RoundJs(cfg.Hp * (1f + BossConfig.HpPerExtraPlayer * (np - 1)) * (1f + BossConfig.HpPerEncounter * (bf != null ? bf.Encounter : 0)));
+            MaxHp = Hp = MathUtil.RoundJs(cfg.Hp * (1f + BossConfig.HpPerExtraPlayer * (np - 1)) * (1f + BossConfig.HpPerEncounter * (bf != null ? bf.Encounter : 0))
+                * (g.SoloHard ? SoloConfig.BossHpMult : 1f));
             NoSwap = true;
             SetState(EnemyState.Custom);
             if (pitImmune) Body.PitSolid = () => true;

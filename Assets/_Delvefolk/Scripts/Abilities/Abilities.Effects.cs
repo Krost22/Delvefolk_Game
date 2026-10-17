@@ -28,7 +28,7 @@ namespace Delvefolk
         {
             var l = new List<Barrel>();
             foreach (var b in g.Barrels)
-                if (!b.Dead && !b.Falling && MathUtil.Hypot(b.X - x, b.Z - z) < r + b.Radius) l.Add(b);
+                if (!b.Dead && !b.Falling && !b.Held && MathUtil.Hypot(b.X - x, b.Z - z) < r + b.Radius) l.Add(b);
             return l;
         }
 

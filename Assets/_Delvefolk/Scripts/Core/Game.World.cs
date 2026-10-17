@@ -162,6 +162,7 @@ namespace Delvefolk
             View = new DungeonView(Dungeon, FloorRoot, n);
             Lighting.SetFog(def.Fog, 24f, 46f);
             CameraCtl.Cam.backgroundColor = MathUtil.Hex(def.Fog);
+            LevelFogColor = def.Fog;
             HpMult = def.HpMult;
             foreach (var r in Dungeon.Rooms) r.Enemies.Clear();
 

@@ -21,6 +21,7 @@ namespace Delvefolk
             State = GameState.Play;
             Ui.ShowHeads();
             LoadFloor(1, null);
+            AnnounceSolo();
         }
 
         partial void OnRunStart();
@@ -130,8 +131,7 @@ namespace Delvefolk
                 vx += p.Vx / focus.Count; vz += p.Vz / focus.Count;
             }
             CameraCtl.Update(dt, center.x, center.y, vx, vz, spread);
-            RenderSettings.fogStartDistance = 24f + CameraCtl.Extra;
-            RenderSettings.fogEndDistance = 46f + CameraCtl.Extra * 1.2f;
+            UpdateFog();
             for (int i = 0; i < Players.Count && i < 2; i++) PlayerLights[i].transform.position = new Vector3(Players[i].X, 2.6f, Players[i].Z);
             Ui.Update(dt);
         }

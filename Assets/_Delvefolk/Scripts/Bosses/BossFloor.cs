@@ -16,6 +16,10 @@ namespace Delvefolk
         public float T;
         public readonly List<Boss> BossList = new List<Boss>();
         public readonly int ArenaW, ArenaH, Cx;
+        // Extras de cada jefe que siguen tras su muerte (p. ej. el premio del Crupier): se avanzan cada frame
+        // y pueden quedarse con el botón de interactuar
+        public event System.Action<float> Ticks;
+        public System.Func<Player, bool> Interact;
 
         // Mapa de la arena: rastrillo '1' delante de las escaleras 'X' (arriba) y entrada 'P' (abajo)
         public static LevelDef BuildLevel(BossEntry entry)
@@ -64,6 +68,7 @@ namespace Delvefolk
         public void Update(float dt)
         {
             T += dt;
+            if (Ticks != null) Ticks(dt);
             if (Phase == "intro" && T >= BossConfig.IntroTime)
             {
                 Phase = "fight";

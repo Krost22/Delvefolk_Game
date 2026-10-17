@@ -512,6 +512,7 @@ namespace Delvefolk
         {
             if (Dead || CarriedBy != null || Spectator) return false;
             if (Iframes > 0f && !opts.Pierce) return false;
+            if (G.SoloHard && !opts.Raw) amount *= SoloConfig.DamageTakenMult;   // solo: todo pega más fuerte
             float dx = X - sx, dz = Z - sz;
             float l = MathUtil.Hypot(dx, dz); if (l == 0f) l = 1f;
             if (!opts.Raw)

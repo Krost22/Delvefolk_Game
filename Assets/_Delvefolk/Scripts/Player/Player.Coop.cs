@@ -7,7 +7,7 @@ namespace Delvefolk
     {
         public void Grab(Player ally)
         {
-            if (Carrying != null || ally.CarriedBy != null || ally.Carrying != null || ally.Dead || ally.GrabbedBy != null) return;
+            if (Carrying != null || CarryingTnt != null || ally.CarriedBy != null || ally.Carrying != null || ally.CarryingTnt != null || ally.Dead || ally.GrabbedBy != null) return;
             ally.EndJump(); ally.Struggle = 0f;
             EndJump();
             G.DropHeld(this);   // una sola cosa en las manos: el compañero

@@ -38,7 +38,7 @@ namespace Delvefolk
         {
             if (Attack != null && Attack.Phase != AttackPhase.Recovery) m = Weapon.MoveMult;
             if (Eating != null) m = Weapon.EatMoveMult;
-            if (Carrying != null) m = 0.75f;
+            if (Carrying != null || CarryingTnt != null) m = 0.75f;
         }
 
         partial void AttackAllowsTurningImpl(ref bool v) { v = Attack == null || Attack.Phase == AttackPhase.Recovery; }
@@ -50,6 +50,10 @@ namespace Delvefolk
             if (Carrying != null)
             {
                 if (Buffer > 0f) { Buffer = 0f; ThrowAlly(inputAngle); }
+            }
+            else if (CarryingTnt != null)
+            {
+                if (Buffer > 0f) { Buffer = 0f; ThrowTnt(inputAngle); }
             }
             else if (Spectator) Buffer = 0f;   // fuera del desafío: puede moverse, pero no actuar
             else if (Weapon.IsFood)
@@ -167,9 +171,9 @@ namespace Delvefolk
         // ---------- Pose del brazo ----------
         partial void ArmPose(ref Pose p, ref bool handled)
         {
-            if (Carrying != null)
+            if (Carrying != null || CarryingTnt != null)
             {
-                p = new Pose(0, -1.6f, 0, -0.2f);   // brazos arriba sujetando al compañero
+                p = new Pose(0, -1.6f, 0, -0.2f);   // brazos arriba sujetando al compañero (o la TNT)
                 Parts.LHand.localPosition = new Vector3(0.3f, 1.9f, 0.0f);
                 handled = true;
                 return;
@@ -205,7 +209,7 @@ namespace Delvefolk
         {
             foreach (var b in G.Barrels)
             {
-                if (b.Dead || b.Falling || StompCd.ContainsKey(b)) continue;
+                if (b.Dead || b.Falling || b.Held || StompCd.ContainsKey(b)) continue;
                 if (MathUtil.Hypot(b.X - X, b.Z - Z) > b.Radius + 0.3f || JumpY > 1.3f || JumpY < 0.4f) continue;
                 StompHittable(b, b.X, b.Z, 1.1f, false);
                 done = true;

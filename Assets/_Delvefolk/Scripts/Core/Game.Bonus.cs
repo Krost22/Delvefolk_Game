@@ -31,6 +31,7 @@ namespace Delvefolk
         partial void InteractionHooks(Player p, ref bool taken)
         {
             if (Bonus.HandleInteraction(p)) { taken = true; return; }
+            if (BossFloor != null && BossFloor.Interact != null && BossFloor.Interact(p)) { taken = true; return; }
             ShopInteraction(p, ref taken);
         }
 

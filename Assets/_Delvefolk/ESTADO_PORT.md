@@ -56,6 +56,19 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
   si cambian los modelos.
 - Pruebas: `RouletteLogicTests` (5, EditMode) y `CrupierTests` (14, PlayMode). Totales: EditMode 52/52, PlayMode 130/130.
 
+## Añadidos de la demo (2026-10-17)
+- **TNT en la mano** (`Player.Tnt.cs`, `Barrel.cs`): el barril de pólvora se coge con {E}; en la mano arde una mecha de 3 s
+  con cuenta atrás; {A} la lanza lejos (puntería asistida a enemigos) y explota al chocar con enemigos, compañeros o muros;
+  {E} la suelta (sigue ardiendo). Si no se lanza, explota en la mano.
+- **Modo solitario** (`Core/Game.Solo.cs`, `SoloConfig`): con un jugador, enemigos ×1,4 de vida, jefes ×1,3, daño recibido
+  ×1,35 y niebla gris densa pegada al jugador. Si se une el J2, se va. Las pruebas lo apagan en `GameTestBase`.
+- **Menos texto**: pantalla de inicio sin el párrafo de consejos (una línea) y ficha de habilidad con una ventaja y una
+  desventaja, sin subtítulo ni línea de compañeros.
+- **Premio del Crupier** (`Bosses/Crupier/CrupierPrize.cs`): al vencerle, lluvia de monedas y ruleta del premio sobre la
+  corona; cada jugador la gira una vez ({E} junto a la corona): dorado jackpot, verde vida llena, rojo/azul botín raro,
+  morado dos botines raros, negro unas monedas.
+- Pruebas `TntTests` (7). Totales: EditMode 52/52, PlayMode 137/137.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el

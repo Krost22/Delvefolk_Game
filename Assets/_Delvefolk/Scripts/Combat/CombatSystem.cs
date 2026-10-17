@@ -40,7 +40,7 @@ namespace Delvefolk
         {
             targets.Clear();
             foreach (var e in g.Enemies) if (!e.Dead && e.State != EnemyState.Falling && !e.Removed) targets.Add(e);
-            foreach (var b in g.Barrels) if (!b.Dead && !b.Falling) targets.Add(b);
+            foreach (var b in g.Barrels) if (!b.Dead && !b.Falling && !b.Held) targets.Add(b);
             foreach (var b in g.Breakables) if (!b.Dead) targets.Add(b);
             g.AddReflectableTargets(targets);
             return targets;

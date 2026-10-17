@@ -57,7 +57,8 @@ namespace Delvefolk
         {
             var e = EnemyFactory.Create(this, ch, x, z, opts);
             if (e == null) return null;
-            if (HpMult != 1f) { e.MaxHp = Mathf.Round(e.MaxHp * HpMult); e.Hp = e.MaxHp; }
+            float hm = HpMult * (SoloHard ? SoloConfig.EnemyHpMult : 1f);
+            if (hm != 1f) { e.MaxHp = Mathf.Round(e.MaxHp * hm); e.Hp = e.MaxHp; }
             Enemies.Add(e);
             e.Room = Dungeon.RoomAt(x, z);
             if (e.Room != null) e.Room.Enemies.Add(e);
@@ -239,11 +240,18 @@ namespace Delvefolk
                     if (c.ConsumeInteract()) p.PutDown();
                     continue;
                 }
+                if (p.CarryingTnt != null)
+                {
+                    Ui.SetPrompt(p.Index, "{A} Lanzar TNT · {E} Soltar");
+                    if (c.ConsumeInteract()) p.DropTnt(4f);
+                    continue;
+                }
                 CoopInteraction(p, mate, dt, ref taken);
                 if (taken) continue;
                 // Objetivo más cercano: objeto del suelo o compañero
                 ItemPickup best = null;
                 Player bestMate = null;
+                Barrel bestTnt = null;
                 float bestD = 1.8f;
                 foreach (var pk in Pickups)
                 {
@@ -256,6 +264,13 @@ namespace Delvefolk
                     float d = MathUtil.Hypot(mate.X - p.X, mate.Z - p.Z);
                     if (d < Mathf.Min(bestD, 1.7f)) { bestD = d; bestMate = mate; best = null; }
                 }
+                if (!p.Airborne)
+                    foreach (var b in Barrels)
+                    {
+                        if (!b.CanBeGrabbed) continue;
+                        float d = MathUtil.Hypot(b.X - p.X, b.Z - p.Z);
+                        if (d < Mathf.Min(bestD, 1.6f)) { bestD = d; bestTnt = b; best = null; bestMate = null; }
+                    }
                 bool nearExit = Dungeon.HasExit && MathUtil.Hypot(Dungeon.ExitX - p.X, Dungeon.ExitZ - p.Z) < 2.2f;
                 if (best != null)
                 {
@@ -286,6 +301,19 @@ namespace Delvefolk
                             SeenHints["throw"] = true;
                             Ui.Toast(p.Look.Name + " lleva a " + bestMate.Look.Name + " en brazos: " + c.S.AttackKey +
                                 " para lanzarlo contra los monstruos (a los dos les duele).", 5f);
+                        }
+                    }
+                }
+                else if (bestTnt != null)
+                {
+                    Ui.SetPrompt(p.Index, "Coger la TNT (¡3 s!)");
+                    if (c.ConsumeInteract())
+                    {
+                        p.GrabTnt(bestTnt);
+                        if (!SeenHints.ContainsKey("tnt"))
+                        {
+                            SeenHints["tnt"] = true;
+                            Ui.Toast(p.Look.Name + " lleva TNT: " + c.S.AttackKey + " para lanzarla antes de que explote.", 4f);
                         }
                     }
                 }

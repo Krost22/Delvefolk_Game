@@ -130,7 +130,7 @@ namespace Delvefolk
         void BuildTitle()
         {
             titleScreen = Overlay("Titulo", 0.55f);
-            var p = Panel(titleScreen, "Tarjeta", new Vector2(640 * Px, 640 * Px));
+            var p = Panel(titleScreen, "Tarjeta", new Vector2(640 * Px, 460 * Px));
             var h1 = Title(p, "DELVEFOLK", 64, 26 * Px);
             h1.characterSpacing = 18f;
             Outline(h1, MathUtil.Hex(0x3a1a08), 0.28f);
@@ -153,17 +153,10 @@ namespace Delvefolk
             }
             PlaceIn(c1.rectTransform, 70 * Px, 190 * Px, 250 * Px, 190 * Px);
             PlaceIn(c2.rectTransform, 340 * Px, 190 * Px, 250 * Px, 190 * Px);
-            var tip = Body(p,
-                "Solo puedes llevar <b>una cosa</b> en la mano: un arma, comida... o a tu compañero, que se puede lanzar contra los monstruos.\n" +
-                "Las armas se gastan y se rompen. Para curarte, coge comida y cómetela (si te pegan, se te cae el bocado).\n" +
-                "Antes de bajar, cada uno elige una <b>habilidad especial</b> y su aspecto en la sala de preparación.\n" +
-                "Si te agarran (un compañero o un Abrazón), <b>machaca botones</b> para soltarte.\n" +
-                "Mandos compatibles: el mando 1 controla al J1 y el mando 2 al J2 (A atacar, X interactuar, B saltar, Y habilidad).",
-                14, 340 * Px, 200 * Px, TipColor);
+            var tip = Body(p, "Coge <b>lo que sea</b> y lánzalo: armas, comida, TNT... o a tu compañero.", 14, 352 * Px, 24 * Px, TipColor);
             tip.alignment = TextAlignmentOptions.Center;
-            tip.lineSpacing = 12f;
-            MakeButton(p, "1 jugador <size=70%>(ESPACIO)</size>", 560 * Px, () => g.OpenLobby(1), -130 * Px);
-            MakeButton(p, "2 jugadores <size=70%>(ENTER)</size>", 560 * Px, () => g.OpenLobby(2), 130 * Px);
+            MakeButton(p, "1 jugador <size=70%>(ESPACIO)</size>", 392 * Px, () => g.OpenLobby(1), -130 * Px);
+            MakeButton(p, "2 jugadores <size=70%>(ENTER)</size>", 392 * Px, () => g.OpenLobby(2), 130 * Px);
             titleScreen.gameObject.SetActive(false);
         }
 

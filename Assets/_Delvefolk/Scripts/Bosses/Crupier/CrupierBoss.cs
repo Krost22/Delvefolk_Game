@@ -17,6 +17,7 @@ namespace Delvefolk
         public CrupierLook Look;
         public float ShieldHp, ShieldMax, ShieldT;
         public CrupierIllusion Illusion;
+        public CrupierPrize Prize;          // lluvia de monedas y ruleta del premio tras vencerle
 
         public CrupierBoss(Game g, float x, float z) : base(g, x, z, BossCfg(c =>
         {
@@ -249,6 +250,7 @@ namespace Delvefolk
             DropShield(false);
             Casino.ClearAll();
             base.Die(cause);
+            if (G.BossFloor != null && G.BossFloor.Phase == "won") Prize = new CrupierPrize(G, Casino.Room.Center);
         }
 
         public override void Destroy()

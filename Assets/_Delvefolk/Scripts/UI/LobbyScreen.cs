@@ -56,8 +56,6 @@ namespace Delvefolk
             box.sizeDelta = new Vector2(W, 660 * Px);
             var h2 = ui.Title(box, "Sala de preparación", 28, 0);
             h2.alignment = TextAlignmentOptions.Center;
-            var sub = ui.Body(box, "Cada aventurero elige <b>una</b> habilidad especial y su aspecto. El aspecto es solo estético.", 13, 44 * Px, 20 * Px, MathUtil.Hex(0xc9b48d));
-            sub.alignment = TextAlignmentOptions.Center;
             float slotW = (1040f - 14f) / 2f * Px;
             for (int i = 0; i < 2; i++) slots[i] = BuildSlot(box, i, i * (slotW + 14 * Px), 72 * Px, slotW);
 
@@ -468,15 +466,13 @@ namespace Delvefolk
             s.CardIcon.text = ab.Icon;
             s.CardName.text = "<b>" + ab.Name + "</b>\n<size=85%><color=#8a7a62>Enfriamiento " + ab.Cooldown + " s · tecla " + ControlSchemes.All[i].AbilityKey + "</color></size>";
             s.CardShort.text = ab.Short;
-            s.Pros.text = Lines(ab.Pros, "<color=#7dd65b><b>+ </b></color>");
-            s.Cons.text = Lines(ab.Cons, "<color=#ff6a5a><b>− </b></color>");
-            s.Allies.text = "👥 Compañeros: " + ab.Allies;
-            // La línea de compañeros va justo debajo de la lista más larga
-            float listH = Mathf.Max(s.Pros.GetPreferredValues(s.Pros.text, s.Pros.rectTransform.rect.width, 0f).y,
-                s.Cons.GetPreferredValues(s.Cons.text, s.Cons.rectTransform.rect.width, 0f).y);
-            var ar = s.Allies.rectTransform;
-            ar.anchoredPosition = new Vector2(ar.anchoredPosition.x, -(72 * Px + listH + 3 * Px));
+            // Ficha corta: solo la ventaja y la desventaja principales
+            s.Pros.text = Lines(First(ab.Pros), "<color=#7dd65b><b>+ </b></color>");
+            s.Cons.text = Lines(First(ab.Cons), "<color=#ff6a5a><b>− </b></color>");
+            s.Allies.text = "";
         }
+
+        static string[] First(string[] items) { return items != null && items.Length > 0 ? new[] { items[0] } : new string[0]; }
 
         static string Lines(string[] items, string bullet)
         {

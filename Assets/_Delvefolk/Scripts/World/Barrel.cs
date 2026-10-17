@@ -3,7 +3,8 @@ using UnityEngine;
 namespace Delvefolk
 {
     // BARRIL: se puede golpear y lanzar. Si va rápido hace daño a lo que toque. Se rompe (Props.js).
-    // El de pólvora prende la mecha al recibir un golpe y explota (reacción en cadena con otros).
+    // El de pólvora (TNT) prende la mecha al recibir un golpe y explota (reacción en cadena con otros). Además se
+    // puede coger: en la mano prende una mecha de 3 s y se lanza lejos (explota al chocar con enemigos o amigos).
     public sealed class Barrel : Entity, IHittable
     {
         public readonly bool Explosive;
@@ -16,6 +17,13 @@ namespace Delvefolk
         public Player MagnetBy;             // atraído por el Imán de Chatarra
         public float MagnetT;
         Transform spark;
+        public Player CarriedBy;            // quien la lleva en la mano
+        public Player ThrownBy;             // quien la lanzó (mientras sigue rodando)
+        public float FlyT = -1f;            // >= 0: en el aire tras lanzarla
+        WorldLabel countdown;
+        public const float HandFuse = 3f, ThrowSpeed = 30f, FlyTime = 0.55f, HoldY = 1.9f;
+        public bool Held { get { return CarriedBy != null; } }
+        public bool CanBeGrabbed { get { return Explosive && !Dead && !Removed && !Falling && CarriedBy == null && FlyT < 0f; } }
         static Mesh stripeMesh, fuseMesh, sparkMesh, skullMesh, barrelMesh;
 
         public Barrel(Game g, float x, float z, bool explosive)
@@ -123,6 +131,12 @@ namespace Delvefolk
                 G.RequestHitstop(0.05f);
                 if (Explosive) Explode(); else { Hp -= 1; if (Hp <= 0) BreakApart(); }
             }
+            else if (p != null && Explosive && ThrownBy != null && p != ThrownBy && mySpeed > 4.5f)
+            {
+                // TNT lanzada contra un compañero: le explota encima
+                ImpactCd = 0.12f;
+                Explode();
+            }
             else if (p != null && MagnetBy != null && p != MagnetBy && mySpeed > 5f)
             {
                 // Barril atraído por un imán: también arrolla a los compañeros
@@ -161,6 +175,7 @@ namespace Delvefolk
         public void Explode()
         {
             if (Dead) return;
+            if (CarriedBy != null) { if (CarriedBy.CarryingTnt == this) CarriedBy.CarryingTnt = null; CarriedBy = null; }
             Dead = true;
             Destroy();
             G.Combat.Explosion(X, Z);
@@ -172,6 +187,10 @@ namespace Delvefolk
             UpdateFlash(dt);
             ImpactCd = Mathf.Max(0f, ImpactCd - dt);
             if (MagnetT > 0f) { MagnetT -= dt; if (MagnetT <= 0f) MagnetBy = null; }
+            UpdateCountdown();
+            if (CarriedBy != null) { UpdateHeld(dt); return; }
+            if (FlyT >= 0f) UpdateFlight(dt);
+            else if (ThrownBy != null && KnockSpeed < 2f) ThrownBy = null;
             if (Falling)
             {
                 fallT += dt;
@@ -180,7 +199,7 @@ namespace Delvefolk
                 if (fallT > 1f) { Dead = true; Destroy(); }
                 return;
             }
-            if (G.Dungeon.IsPitAt(X, Z))
+            if (FlyT < 0f && G.Dungeon.IsPitAt(X, Z))
             {
                 Falling = true; fallT = 0f; Body.Enabled = false; Shadow.gameObject.SetActive(false);
                 G.Audio.Play("fall");
@@ -198,6 +217,92 @@ namespace Delvefolk
             Spin = Mathf.Max(0f, Spin - dt * 2f);
             Model.localRotation = ProcMesh.EulerXYZ(0, 0, Mathf.Sin(G.Time * 30f) * Mathf.Min(0.25f, sp * 0.03f) + Spin * 0.2f);
             SyncRoot();
+        }
+
+        // ---------- TNT en la mano ----------
+        public void PickUp(Player p)
+        {
+            CarriedBy = p;
+            ThrownBy = null; FlyT = -1f; MagnetBy = null;
+            Body.Enabled = false;
+            Body.Kx = Body.Kz = 0f;
+            // Mecha de la mano: 3 s (si ya ardía con menos, se queda con menos)
+            Fuse = Fuse < 0f ? HandFuse : Mathf.Min(Fuse, HandFuse);
+            G.Audio.Play("spikeArm");
+        }
+
+        void UpdateHeld(float dt)
+        {
+            var c = CarriedBy;
+            if (c.Dead || c.Removed || c.CarryingTnt != this) { Drop(0f); return; }
+            Body.X = c.X; Body.Z = c.Z;
+            SyncRoot();
+            SetY(HoldY + c.Root.position.y);
+            Model.localRotation = ProcMesh.EulerXYZ(0, 0, Mathf.Sin(G.Time * 9f) * 0.08f);
+            if (spark) spark.localScale = Vector3.one * (0.8f + G.FxRand.Next() * 0.9f);
+            Fuse -= dt;
+            Model.localScale = Vector3.one * (1f + Mathf.Sin(Fuse * (Fuse < 1f ? 70f : 30f)) * 0.06f);
+            if (Fuse <= 0f) Explode();
+        }
+
+        // Suelta la TNT junto a quien la llevaba (place: empujoncito hacia delante). La mecha sigue ardiendo
+        public void Drop(float place)
+        {
+            var c = CarriedBy;
+            if (c == null) return;
+            CarriedBy = null;
+            if (c.CarryingTnt == this) c.CarryingTnt = null;
+            Body.Enabled = true;
+            Body.X = c.X; Body.Z = c.Z;
+            Body.Ignore = c.Body; Body.IgnoreT = 0.3f;
+            SetY(0f);
+            if (place != 0f) Knock(Mathf.Sin(c.Facing) * place, Mathf.Cos(c.Facing) * place);
+        }
+
+        // Lanzamiento: vuela en parábola y sale disparada; al chocar con alguien o con un muro, explota
+        public void Throw(Player by, float angle, float speed)
+        {
+            Drop(0f);
+            ThrownBy = by;
+            FlyT = 0f;
+            Body.Kx = Mathf.Sin(angle) * speed; Body.Kz = Mathf.Cos(angle) * speed;
+            Spin = 1f;
+        }
+
+        void UpdateFlight(float dt)
+        {
+            FlyT += dt;
+            float k = Mathf.Clamp01(FlyT / FlyTime);
+            SetY((1f - k) * HoldY + 4f * 1.6f * k * (1f - k));
+            if (k >= 1f) { FlyT = -1f; SetY(0f); G.Audio.Play("thwack"); }
+        }
+
+        void SetY(float y)
+        {
+            var p = Root.position; p.y = y; Root.position = p;
+            Shadow.localPosition = new Vector3(0f, 0.02f - y, 0f);
+        }
+
+        // Cuenta atrás sobre la TNT mientras arde la mecha que se encendió al cogerla
+        void UpdateCountdown()
+        {
+            bool show = Explosive && Fuse > 0f && (CarriedBy != null || ThrownBy != null || FlyT >= 0f || handLit);
+            if (CarriedBy != null) handLit = true;
+            if (!show) { if (countdown != null) { countdown.Remove(); countdown = null; } return; }
+            string txt = Mathf.CeilToInt(Fuse).ToString();
+            var pos = new Vector3(X, Root.position.y + 2.6f, Z);   // por encima del aviso de botones
+            if (countdown == null) countdown = G.Ui.Label(txt, pos, 0xff7a3a);
+            else if (countdown.T.text != txt) { countdown.T.text = txt; G.Audio.Play("tick"); }
+            countdown.Pos = pos;
+        }
+        bool handLit;
+
+        public override void Destroy()
+        {
+            if (countdown != null) { countdown.Remove(); countdown = null; }
+            if (CarriedBy != null && CarriedBy.CarryingTnt == this) CarriedBy.CarryingTnt = null;
+            CarriedBy = null;
+            base.Destroy();
         }
     }
 }

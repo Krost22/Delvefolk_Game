@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Delvefolk
 {
-    // Ficha de una habilidad especial (Abilities.js): datos, textos de la sala de preparación y su
-    // demostración en la vista previa. El comportamiento (activar, durar, terminar) llega en la fase 5.
+    // Ficha de una habilidad especial (Abilities.js): datos, textos de la sala de preparación, su
+    // demostración en la vista previa y su comportamiento (Abilities.Effects.cs).
     public sealed class AbilityDef
     {
         public string Id, Name, Icon, Short, Allies;
@@ -16,11 +16,19 @@ namespace Delvefolk
         public Dictionary<string, float> P = new Dictionary<string, float>();
         // Efecto de demostración para la sala de preparación (fx, tiempo)
         public Action<Effects, float> Preview;
+        // Comportamiento: Activate devuelve false si no se puede usar ahora (no gasta enfriamiento);
+        // Tick mientras dura (Duration > 0) y End al terminar
+        public Func<AbilityCtx, bool> Activate;
+        public Action<AbilityCtx, float> Tick;
+        public Action<AbilityCtx> End;
+        // Banderas que consulta el jugador mientras está activa (Último Recurso)
+        public float DamageTakenMult = 1f;
+        public bool KnockImmune, Unstoppable;
 
         public float this[string key] { get { return P[key]; } }
     }
 
-    public static class Abilities
+    public static partial class Abilities
     {
         public static readonly Dictionary<string, AbilityDef> Defs = new Dictionary<string, AbilityDef>();
         public static readonly List<string> Order = new List<string>();
@@ -48,6 +56,7 @@ namespace Delvefolk
                 Cons = new[] { "También aturde a tus compañeros", "Enfriamiento largo", "Te quedas clavado un instante" },
                 Allies = "Sí: los aturde y los levanta (sin daño)",
                 P = P("radius", 4.2f, "damage", 8, "stun", 1.1f, "allyStun", 0.8f, "knock", 6),
+                Activate = QuakeActivate,
                 Preview = (fx, t) =>
                 {
                     fx.Ring(0, 0, RingOpts.Of(0xd09a50, 3f, 0.45f));
@@ -63,6 +72,7 @@ namespace Delvefolk
                 Cons = new[] { "Te quita vida a ti (¡puede derribarte!)", "Hiere a los compañeros cercanos", "Enfriamiento muy largo" },
                 Allies = "Sí: reciben daño y salen despedidos",
                 P = P("radius", 3.6f, "damage", 55, "knock", 22, "stun", 0.9f, "selfDamage", 18, "allyDamage", 22),
+                Activate = BlastActivate,
                 Preview = (fx, t) =>
                 {
                     fx.Ring(0, 0, RingOpts.Of(0xffb040, 3f, 0.4f));
@@ -79,6 +89,7 @@ namespace Delvefolk
                 Cons = new[] { "Apenas puedes girar durante la carga", "Si chocas con una pared te quedas aturdido", "Puedes arrollar a tu compañero" },
                 Allies = "Sí: los arrolla (los empuja y aturde un poco, sin daño)",
                 P = P("speed", 15, "turnRate", 2.4f, "damage", 12, "knock", 17, "stun", 0.7f, "allyKnock", 12, "allyStun", 0.45f, "wallStun", 0.9f, "wallDamage", 6),
+                Activate = ChargeActivate, Tick = ChargeTick, End = ChargeEnd,
                 // Coordenadas de la vista previa del web (x, z) → Unity (x, −z)
                 Preview = (fx, t) =>
                 {
@@ -95,6 +106,7 @@ namespace Delvefolk
                 Cons = new[] { "Casi no hace daño", "La interrupción es breve" },
                 Allies = "Sí: les da velocidad (beneficioso)",
                 P = P("radius", 6.5f, "allyRadius", 8, "damage", 3, "stun", 0.55f, "haste", 1.35f, "hasteTime", 4, "push", 8),
+                Activate = ShoutActivate,
                 Preview = (fx, t) =>
                 {
                     for (int i = 0; i < 3; i++) fx.Ring(0, 0, RingOpts.Of(i == 1 ? 0xffd040 : 0xff6040, 1.8f + i * 0.8f, 0.35f + i * 0.12f, 1.0f));
@@ -109,6 +121,7 @@ namespace Delvefolk
                 Cons = new[] { "Alcance limitado", "Enfriamiento alto", "Si no hay nadie a la vista, no funciona" },
                 Allies = "Configurable: con \"intercambio con aliados\" activado, puede cambiarte por tu compañero (se marea un momento)",
                 P = P("range", 8, "cone", 0.9f, "enemyStun", 0.7f, "confuse", 1.0f),
+                Activate = SwapActivate,
                 Preview = (fx, t) =>
                 {
                     fx.Burst(-1.5f, 1, 0, BurstOpts.Of(12, 0xb060ff, 3f, 3f, 0.14f));
@@ -125,6 +138,7 @@ namespace Delvefolk
                 Cons = new[] { "Los objetos también golpean a tus compañeros", "Lo pesado tarda en llegar", "No mueve nada fijo (columnas, cajas, trampas)" },
                 Allies = "Sí: los objetos que vuelan les golpean",
                 P = P("radius", 8, "itemSpeed", 11, "barrelPull", 26, "hitDamage", 8, "hitKnock", 6),
+                Activate = MagnetActivate, Tick = MagnetTick,
                 Preview = (fx, t) =>
                 {
                     var r = RingOpts.Of(0x60b0ff, 3f, 0.4f); r.R0 = 3f;
@@ -145,6 +159,9 @@ namespace Delvefolk
                 Cons = new[] { "No es invulnerabilidad", "Al acabar quedas ralentizado", "Enfriamiento alto" },
                 Allies = "No afecta a los compañeros",
                 P = P("damageTaken", 0.35f, "slow", 0.55f, "slowTime", 1.6f),
+                Activate = GuardActivate, Tick = GuardTick, End = GuardEnd,
+                // Banderas que consulta el jugador mientras está activa
+                DamageTakenMult = 0.35f, KnockImmune = true, Unstoppable = true,
                 Preview = (fx, t) => fx.Ring(0, 0, RingOpts.Of(0xffd040, 1.5f, 0.4f, 1f)),
             });
         }

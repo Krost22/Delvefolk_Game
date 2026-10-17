@@ -48,6 +48,10 @@ namespace Delvefolk
 
         partial void OnPlayerJoinedBonus(Player p);
 
+        // En los pisos bonus, quien está fuera del desafío no puede usar su habilidad
+        public bool AbilitiesBlockedFor(Player p) { bool v = false; AbilitiesBlockedImpl(p, ref v); return v; }
+        partial void AbilitiesBlockedImpl(Player p, ref bool v);
+
         // En los pisos bonus el desafío decide si se puede reanimar
         public bool AllowRevive() { bool v = true; AllowReviveImpl(ref v); return v; }
         partial void AllowReviveImpl(ref bool v);

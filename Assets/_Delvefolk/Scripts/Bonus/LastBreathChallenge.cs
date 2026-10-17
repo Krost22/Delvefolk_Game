@@ -47,7 +47,7 @@ namespace Delvefolk
                     {
                         "Solo las zonas <b>verdes</b> están libres de gas. Cambian cada " + BonusConfig.Breath.PhaseEvery + " s.",
                         "Cuando el suelo parpadea en naranja tienes " + BonusConfig.Breath.WarnTime + " s para llegar a una zona nueva.",
-                        "Un rodillo de piedra cruza la sala por la fila marcada con flechas: apártate (o empuja a alguien).",
+                        "Un rodillo de piedra cruza la sala por la fila marcada con flechas: apártate, sáltalo (o empuja a alguien).",
                         "Los barriles se pueden empujar para abrirse paso... o para estorbar.",
                     },
                     Win = "Seguir en pie cuando pasen " + BonusConfig.Breath.Duration + " s.",
@@ -199,6 +199,8 @@ namespace Delvefolk
             foreach (var p in G.Players)
             {
                 if (!p.Targetable || r.Hit.Contains(p) || Mathf.Abs(p.Z - r.Z) > hitR || Mathf.Abs(p.X - r.X) > hitR) continue;
+                // Desviación del original (§11): como dice la viñeta, se puede saltar por encima
+                if (p.JumpY > JumpConfig.DodgeHeight * 0.6f) continue;
                 r.Hit.Add(p);
                 float side = p.Z >= r.Z ? 1f : -1f;
                 if (p.Hurt(BonusConfig.Breath.RollerDamage, r.X - r.Dir, p.Z - side, 0f))
@@ -227,6 +229,9 @@ namespace Delvefolk
         }
 
         public bool RollerActive { get { return roller != null; } }
+        public bool RollerRolling { get { return roller != null && roller.Warn <= 0f; } }
+        public Vector2 RollerPos { get { return roller != null ? new Vector2(roller.X, roller.Z) : Vector2.zero; } }
+        public bool RolledOver(object o) { return roller != null && roller.Hit.Contains(o); }
 
         public override void Update(float dt)
         {

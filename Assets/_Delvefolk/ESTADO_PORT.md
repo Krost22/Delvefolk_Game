@@ -24,10 +24,12 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
 - Pruebas: `BossTests` 11, `TwinsTests` 8, `ChefTests` 8, `BellTests` 10. Totales: EditMode 47/47, PlayMode 115/115.
 - Cambio de prueba: en `BellTests` el barril abre la campana en el primer frame (el original lo veía aún en "opening").
 
+## Hecho (tras la fase 8)
+- §11 resuelta: el rodillo de Último Aliento se esquiva saltando (`JumpY > DodgeHeight·0.6` ≈ 0.51), como dice su viñeta.
+  Prueba `UltimoAliento_ElRodilloSeEsquivaSaltando`. Totales: EditMode 47/47, PlayMode 116/116.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
-- Pregunta §11 abierta: el rodillo de Último Aliento dice "sáltalo con {J}" pero el original nunca comprueba el salto.
-  Se mantiene el comportamiento original; propuesta: permitir esquivar con `JumpY > 0.51`.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el
   original); las mallas de las viñetas no se liberan (caché por aspecto, fuga acotada).
 

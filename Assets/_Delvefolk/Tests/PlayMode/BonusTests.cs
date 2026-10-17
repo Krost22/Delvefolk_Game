@@ -341,6 +341,38 @@ namespace Delvefolk.Tests
             yield break;
         }
 
+        [UnityTest]
+        public IEnumerator UltimoAliento_ElRodilloSeEsquivaSaltando()
+        {
+            var ch = Begin<LastBreathChallenge>("breath");
+            Player p1 = G.Players[0], p2 = G.Players[1];
+            System.Action safe = () => { var z = ch.Zones[0]; PutU(p2, Grid.X(z.Tx) + 1f, Grid.Z(z.Tz) - 1f); p2.Hp = 100f; };
+            // Pasa un rodillo con p1 en el aire justo encima, y otro con p1 en el suelo
+            for (int pass = 0; pass < 2; pass++)
+            {
+                bool jump = pass == 0, hit = false;
+                ch.RollerT = 0f;
+                int guard = 0;
+                while (!ch.RollerRolling && guard++ < 600) { safe(); Step(1); }
+                Assert.IsTrue(ch.RollerRolling, "el rodillo arranca");
+                guard = 0;
+                while (ch.RollerActive && guard++ < 600)
+                {
+                    safe();
+                    var r = ch.RollerPos;
+                    PutU(p1, r.x, r.y);
+                    p1.Hp = 100f; p1.Iframes = 0f;
+                    if (jump) { p1.JumpY = 1f; p1.JumpV = 0f; } else p1.EndJump();
+                    Step(1);
+                    hit |= ch.RolledOver(p1);
+                }
+                if (jump) Assert.IsFalse(hit, "saltando por encima no aplasta");
+                else Assert.IsTrue(hit, "en el suelo sí aplasta");
+            }
+            Leave();
+            yield break;
+        }
+
         // ---------- Puente ----------
         [UnityTest]
         public IEnumerator Puente_SiempreHayRutaSeguraLaFragilCaeYCruzarDaBotin()

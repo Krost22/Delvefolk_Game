@@ -381,6 +381,7 @@ namespace Delvefolk
     {
         public string Id;
         public float Weight = 1f, Cooldown, InitialCd, CdLeft;
+        public Func<float> WeightFn;      // peso que depende del estado (si existe, manda sobre Weight)
         public int[] Phases;
         public Func<Boss, Player, float, bool> Can;
         public Action<Boss> Start;
@@ -501,7 +502,7 @@ namespace Delvefolk
         {
             var ok = Patterns.FindAll(p => p.CdLeft <= 0f && (p.Phases == null || Array.IndexOf(p.Phases, Phase) >= 0) && (p.Can == null || p.Can(this, player, dist)));
             if (ok.Count == 0) return null;
-            return G.Rand.Weighted(ok, p => p.Weight);
+            return G.Rand.Weighted(ok, p => p.WeightFn != null ? p.WeightFn() : p.Weight);
         }
 
         public void StartPattern(BossPattern p)

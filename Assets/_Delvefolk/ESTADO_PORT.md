@@ -11,18 +11,20 @@ Original (three.js): `C:\Users\eduar\OneDrive\Documentos\Proyectos juegos web\De
 - Corrección pedida: el panel "DERRIBADO" se quita al revivir (`Player.Revive`).
 - Pruebas: EditMode 47/47, PlayMode 73/73 (al cerrar la fase 6).
 
-El juego es jugable de principio a fin: título → lobby → pisos → pisos bonus → siguiente piso.
+El juego es jugable de principio a fin: título → lobby → pisos → bonus → tienda → jefes cada 2 pisos → victoria.
 
 ## Hecho (fase 7)
 - Tienda tras cada bonus (`Scripts/Shop/ShopFloor.cs`, `Core/Game.Shop.cs`), Duende Tendero (`Entities/ShopKeeper.cs`),
   armas especiales y escopeta (`Items/SpecialWeapons.cs`), barra de jefe del HUD (`UI/HudBoss.cs`).
 - Pruebas `ShopTests` (5). Totales: EditMode 47/47, PlayMode 78/78.
 
+## Hecho (fase 8)
+- Núcleo de jefes (`Scripts/Bosses/BossCore.cs`: avisos, ondas, proyectiles devolvibles, `Boss`, registro), `BossFloor.cs`,
+  `Core/Game.Boss.cs`. Jefes cada 2 pisos en el orden Gólem → Gemelos → Chef → Campana (`MatchSettings.bosses`).
+- Pruebas: `BossTests` 11, `TwinsTests` 8, `ChefTests` 8, `BellTests` 10. Totales: EditMode 47/47, PlayMode 115/115.
+- Cambio de prueba: en `BellTests` el barril abre la campana en el primer frame (el original lo veía aún en "opening").
+
 ## Pendiente
-- **Fase 8 jefes (en curso)**: HECHO núcleo (`Scripts/Bosses/BossCore.cs`: avisos, ondas, proyectiles, `Boss`, registro),
-  `BossFloor.cs`, `Core/Game.Boss.cs`, Gólem (`GolemBoss.cs`, `BossTests.cs` 11), Gemelos (`TwinsBoss.cs`, `TwinsTests.cs` 8) y Chef (`ChefBoss.cs`, `ChefTests.cs` 8).
-  FALTA: Campana (BellBoss.js) y sus pruebas (tests/boss-*.test.js).
-  Cada jefe se registra en `BossRegistrations` (método parcial con su nombre); mientras falte, `Bosses.Get` cae en el Gólem.
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Pregunta §11 abierta: el rodillo de Último Aliento dice "sáltalo con {J}" pero el original nunca comprueba el salto.
   Se mantiene el comportamiento original; propuesta: permitir esquivar con `JumpY > 0.51`.

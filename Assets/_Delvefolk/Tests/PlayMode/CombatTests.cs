@@ -366,6 +366,7 @@ namespace Delvefolk.Tests
         public IEnumerator Victoria_AlLlegarAlPiso3YLuegoPisosEspejo()
         {
             G.Settings.BonusMode = "never";
+            G.Settings.bosses = false;   // con jefes, la victoria llega tras el del piso 2 (BossTests)
             G.Start(1); Step(2);
             G.LoadFloor(2, G.CollectCarry()); Step(2);
             var p = P1;

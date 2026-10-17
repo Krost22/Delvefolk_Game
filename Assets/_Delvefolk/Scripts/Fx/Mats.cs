@@ -74,6 +74,19 @@ namespace Delvefolk
             return m;
         }
 
+        static readonly Dictionary<int, Material> solids = new Dictionary<int, Material>();
+
+        // Material opaco de un color fijo (para mallas sin color de vértice)
+        public static Material Solid(int hex)
+        {
+            Material m;
+            if (solids.TryGetValue(hex, out m) && m) return m;
+            m = Make("df_solid_" + hex.ToString("x6"), false, false, false, false, false);
+            m.SetColor(BaseColorId, MathUtil.Hex(hex));
+            solids[hex] = m;
+            return m;
+        }
+
         // Equivalente con nuestro shader de un material de los paquetes de assets (textura, color, emisión)
         public static Material FromAsset(Material src)
         {

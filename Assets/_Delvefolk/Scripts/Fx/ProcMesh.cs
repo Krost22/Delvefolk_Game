@@ -502,6 +502,33 @@ namespace Delvefolk
             return this;
         }
 
+        // Pieza de dos caras (side: DoubleSide): se añade también con los triángulos y normales invertidos
+        public MeshBuilder AddDouble(MeshData part, Matrix4x4 m, Color color)
+        {
+            Add(part, m, color);
+            var nm = m.inverse.transpose;
+            int baseIndex = data.Count;
+            for (int i = 0; i < part.Count; i++)
+            {
+                data.V.Add(m.MultiplyPoint3x4(part.V[i]));
+                data.N.Add(-nm.MultiplyVector(part.N[i]).normalized);
+                data.UV.Add(part.UV[i]);
+                var pc = part.C[i];
+                data.C.Add(new Color(pc.r * color.r, pc.g * color.g, pc.b * color.b, pc.a * color.a));
+            }
+            bool flip = m.determinant < 0;
+            for (int s = 0; s < part.Sub.Count; s++)
+            {
+                var src = part.Sub[s];
+                for (int k = 0; k < src.Count; k += 3)
+                {
+                    if (flip) { data.I.Add(baseIndex + src[k]); data.I.Add(baseIndex + src[k + 1]); data.I.Add(baseIndex + src[k + 2]); }
+                    else { data.I.Add(baseIndex + src[k]); data.I.Add(baseIndex + src[k + 2]); data.I.Add(baseIndex + src[k + 1]); }
+                }
+            }
+            return this;
+        }
+
         public bool Empty { get { return data.Count == 0; } }
         public MeshData Data { get { return data; } }
         public Mesh ToMesh(string name = "merged") { return data.ToMesh(name); }

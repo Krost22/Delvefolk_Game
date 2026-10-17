@@ -11,8 +11,11 @@ namespace Delvefolk
     {
         public readonly GameLoop Host;
         public readonly InputHub Input = new InputHub();
+        public readonly uint Seed;
         // Aleatoriedad de juego: determinista con la semilla (pruebas reproducibles)
         public readonly Rng Rand;
+        // Aleatoriedad solo visual (partículas, variantes de modelos): no altera la de juego
+        public readonly Rng FxRand;
         public readonly AudioSynth Audio = new AudioSynth();
 
         public GameState State = GameState.Title;
@@ -34,7 +37,9 @@ namespace Delvefolk
         public Game(GameLoop host, uint seed)
         {
             Host = host;
+            Seed = seed;
             Rand = new Rng(seed);
+            FxRand = new Rng(seed ^ 0x9e3779b9u);
             SceneRoot = new GameObject("Delvefolk").transform;
             if (host) SceneRoot.SetParent(host.transform, false);
             Input.PadDisconnected += OnPadDisconnect;
@@ -110,6 +115,7 @@ namespace Delvefolk
         {
             FrameCount++;
             Input.Poll();
+            if (CameraCtl != null) CameraCtl.Zoom(Input.Wheel);
             // Pausa solo en partida (en la sala de preparación, Esc vuelve al título)
             if ((State == GameState.Play || State == GameState.Paused) && Input.ConsumeAny(PauseKeys)) TogglePause();
             if (Input.Consume("KeyM"))

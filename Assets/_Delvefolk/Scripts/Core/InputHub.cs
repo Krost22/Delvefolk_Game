@@ -63,7 +63,16 @@ namespace Delvefolk
             return c;
         }
 
-        public void Clear() { down.Clear(); pressed.Clear(); }
+        // Suelta todo, también los ejes y botones de los mandos (se vuelven a leer en el siguiente Poll)
+        public void Clear()
+        {
+            down.Clear(); pressed.Clear();
+            foreach (var p in Pads)
+            {
+                p.X = 0f; p.Y = 0f;
+                for (int b = 0; b < p.Buttons.Length; b++) p.Buttons[b] = false;
+            }
+        }
         public bool IsDown(string code) { return down.Contains(code); }
         public bool WasPressed(string code) { return pressed.Contains(code); }
         public bool Consume(string code) { return pressed.Remove(code); }

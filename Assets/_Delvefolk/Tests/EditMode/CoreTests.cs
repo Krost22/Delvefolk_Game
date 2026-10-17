@@ -112,6 +112,14 @@ namespace Delvefolk.Tests
             Assert.IsFalse(c.AttackPressed());
             input.Press("GP1:UP");
             Assert.IsTrue(c2.MenuPressed(0));
+            // El stick del mando, si se mueve, sustituye al teclado; Clear lo suelta
+            input.Clear();
+            input.Hold("KeyW");
+            input.Pads[0].Connected = true; input.Pads[0].X = 0.6f; input.Pads[0].Y = -0.8f;
+            Assert.AreEqual(new Vector2(0.6f, -0.8f), c.Axis());
+            input.Clear();
+            Assert.AreEqual(Vector2.zero, c.Axis());
+            Assert.IsTrue(input.Pads[0].Connected);
         }
 
         [Test]

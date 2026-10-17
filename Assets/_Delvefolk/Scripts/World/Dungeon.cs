@@ -22,7 +22,7 @@ namespace Delvefolk
         public string Opens { get { return Def.Opens; } }
         public int X0, Z0, X1, Z1;
         public bool Entered, Cleared;
-        public readonly List<object> Enemies = new List<object>();
+        public readonly List<Enemy> Enemies = new List<Enemy>();
     }
 
     // Rastrillo: casillas contiguas con el mismo número

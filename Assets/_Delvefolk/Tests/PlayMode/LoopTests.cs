@@ -34,6 +34,48 @@ namespace Delvefolk.Tests
 
         // Pulsación de un frame (como un keydown sin repetición)
         protected void Press(string code) { G.Input.Press(code); }
+
+        // ---- Ayudas equivalentes a las del arnés de pruebas del original (tests/harness.js) ----
+        // Partida nueva sin los enemigos del mapa (las pruebas crean los suyos)
+        protected Game StartRun(int n = 1)
+        {
+            G.Start(n);
+            Step(2);
+            foreach (var e in G.Enemies) e.Destroy();
+            G.Enemies.Clear();
+            foreach (var r in G.Dungeon.Rooms) r.Enemies.Clear();
+            return G;
+        }
+
+        // Coordenadas del web (x, z) → Unity (x, −z)
+        protected static Vector2 W(float x, float z) { return new Vector2(x, -z); }
+
+        protected void Put(Entity e, float webX, float webZ) { PutU(e, webX, -webZ); }
+
+        protected void PutU(Entity e, float x, float z)
+        {
+            e.Body.X = x; e.Body.Z = z;
+            e.Body.Kx = e.Body.Kz = 0f;
+            e.SyncRoot();
+        }
+
+        // Pulsar, un frame y soltar (T.tap)
+        protected void Tap(string code)
+        {
+            G.Input.Tap(code);
+            Step(1);
+            G.Input.Release(code);
+        }
+
+        protected Enemy SpawnAt(char ch, float webX, float webZ)
+        {
+            var e = G.SpawnEnemy(ch, webX, -webZ);
+            e.Wake(false);
+            e.SetState(EnemyState.Chase);
+            return e;
+        }
+
+        protected static void Face(Player p, float x, float z) { p.Facing = Mathf.Atan2(x - p.X, z - p.Z); }
     }
 
     public class LoopTests : GameTestBase
@@ -51,13 +93,15 @@ namespace Delvefolk.Tests
             yield return null;
             yield return null;
             Assert.AreEqual(t, G.Time);
-            // Misma semilla, misma aleatoriedad de juego
-            var other = new GameObject("Otro").AddComponent<GameLoop>();
+            // Misma semilla, misma aleatoriedad de juego (la vista previa del título ya gasta números en ambas)
+            var a = new GameObject("OtroA").AddComponent<GameLoop>();
+            var b = new GameObject("OtroB").AddComponent<GameLoop>();
             try
             {
-                Assert.AreEqual(new Rng(1234u).NextDouble(), other.Game.Rand.NextDouble());
+                Assert.AreEqual(1234u, a.Game.Seed);
+                for (int i = 0; i < 5; i++) Assert.AreEqual(a.Game.Rand.NextDouble(), b.Game.Rand.NextDouble());
             }
-            finally { Object.DestroyImmediate(other.gameObject); }
+            finally { Object.DestroyImmediate(a.gameObject); Object.DestroyImmediate(b.gameObject); }
         }
 
         [UnityTest]

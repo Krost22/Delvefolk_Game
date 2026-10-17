@@ -39,6 +39,26 @@ MonoBehaviour:
   EntranceDoor: {fileID: 3402903874492364359, guid: 1450bf572a9abe74f88bbed7ccc09472, type: 3}
   GateBars: {fileID: 70093922, guid: 42152f05150e2294eac81abcd97634e2, type: 3}
   Spikes: {fileID: 3543125075967514443, guid: 68b637806d6efd24792a372d9117a95d, type: 3}
+  SlimeModel: {fileID: 4162695792829326466, guid: 3616c8d031e272f44a85d15bca9de275, type: 3}
+  GoblinModel: {fileID: 274460893837472473, guid: 9157400a530a20946aef13bb5c6da727, type: 3}
+  GrabberModel: {fileID: 768083801442284221, guid: 1819f39e18359c84dba1d64815be12f6, type: 3}
+  Crown: {fileID: 794930279730652231, guid: 462744d4504c94f40890a6592a874f48, type: 3}
+  Barrel: {fileID: 952783696, guid: f3ccfa9003e9e7e4799853e37266bcd3, type: 3}
+  Bookshelves:
+  - {fileID: 7733616489326405140, guid: e57c4d1aa39fe05418b2309fed797cf9, type: 3}
+  - {fileID: 8837694006211629010, guid: ddabe4f409d94f34ab08c38352c073f1, type: 3}
+  - {fileID: 1313783319754763808, guid: 714a01a37c57c71479c42f7471472216, type: 3}
+  - {fileID: 2182185726371965972, guid: 6d306b8a63b773047bb3f47d4edeeaf3, type: 3}
+  - {fileID: 4299904089720847254, guid: 8fd454ea17eef1d4899aaf0e5e53c5d2, type: 3}
+  Tables:
+  - {fileID: 5364223807928495789, guid: 376da426e368b614baa3d3aa17cdb455, type: 3}
+  - {fileID: 1516204421225355874, guid: e932ca3a6278fd8489bb0a80eb24048e, type: 3}
+  Vases:
+  - {fileID: 2264124916273116200, guid: 791ddcd69989bb848805f4f234a7b180, type: 3}
+  - {fileID: 5316335274358942857, guid: ff9e1348b94ef904ca90b06c8c3058f0, type: 3}
+  - {fileID: 7795256517292645473, guid: 553cd44a58dd98f46848ff0b39985ff9, type: 3}
+  - {fileID: 2746776423899703102, guid: ae1f6ea531c09b1488fc4a2d72c2b225, type: 3}
+  - {fileID: 3826786991222737346, guid: d1d764860b3452e43b96d5ecea2e192d, type: 3}
   Rubble:
   - {fileID: 1766012285, guid: fa101c0f6bc8deb4db66122e0340476f, type: 3}
   - {fileID: 1540692485, guid: bb5e701e8a3049948bd16968096a99d4, type: 3}

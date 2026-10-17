@@ -63,9 +63,9 @@ namespace Delvefolk
         public void Transition(Action fn)
         {
             OnFade(true);
-            if (InstantTransitions) { fn(); return; }
             pendingTransition = fn;
-            transitionLeft = 0.65f;
+            // En las pruebas no se espera al fundido: se ejecuta al terminar el frame en curso
+            transitionLeft = InstantTransitions ? 0f : 0.65f;
         }
 
         public bool TransitionPending { get { return pendingTransition != null; } }
@@ -123,8 +123,12 @@ namespace Delvefolk
                 bool m = Audio.ToggleMute();
                 Toast(m ? "Sonido desactivado" : "Sonido activado", 1.5f);
             }
+            ScreenInput();
             FrameBody(dt);
+            if (InstantTransitions && pendingTransition != null) FlushTransition();
         }
+
+        partial void ScreenInput();
 
         // Cuerpo del frame según el estado (lo completan las fases siguientes)
         void FrameBody(float dt)

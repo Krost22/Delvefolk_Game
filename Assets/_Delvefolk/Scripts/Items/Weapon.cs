@@ -128,6 +128,22 @@ namespace Delvefolk
             float l = MathUtil.Hypot(x, z); if (l == 0f) l = 1f;
             return new Vector2(x / l, z / l);
         }
+
+        // Permite a cada arma alterar el golpe antes de aplicarlo (combos, críticos cómicos...)
+        public virtual void ModifyHit(Hit hit, HitCtx ctx) { }
+        // Efecto especial tras aplicar el golpe
+        public virtual void OnHit(IHittable target, Hit hit, Game g) { }
+        public virtual void OnAttackStart(Player player, Game g) { }
+        // Al empezar la fase activa (la escopeta dispara aquí)
+        public virtual void OnActive(Player player, Game g) { }
+        // Al comerla (la comida con efecto propio, como el queso podrido)
+        public virtual bool OnEaten(Player eater, Game g) { return false; }
+
+        // Pieza de un modelo: malla con transformación de three.js (posición, Euler XYZ, escala)
+        protected static Matrix4x4 M(float x, float y, float z, float rx = 0, float ry = 0, float rz = 0, float sx = 1, float sy = 1, float sz = 1)
+        {
+            return Matrix4x4.TRS(new Vector3(x, y, z), ProcMesh.EulerXYZ(rx, ry, rz), new Vector3(sx, sy, sz));
+        }
     }
 
     // Sin arma: bofetadas. Funciona, pero da vergüenza.

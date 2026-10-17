@@ -41,6 +41,19 @@ namespace Delvefolk
         public static Material Transparent { get { return transparent ? transparent : (transparent = Make("df_transparent", true, true, false, true)); } }
         public static Material TransparentLit { get { return transparentLit ? transparentLit : (transparentLit = Make("df_transparentLit", false, true, false, false)); } }
         public static Material Additive { get { return additive ? additive : (additive = Make("df_additive", true, true, true, true)); } }
+        // Siempre encima (barras de vida de los enemigos: depthTest false del original)
+        static Material overlay;
+        public static Material Overlay
+        {
+            get
+            {
+                if (overlay) return overlay;
+                overlay = Make("df_overlay", true, true, false, true);
+                overlay.SetFloat("_ZTest", (float)CompareFunction.Always);
+                overlay.renderQueue = (int)RenderQueue.Overlay;
+                return overlay;
+            }
+        }
 
         public static Material Make(string name, bool isUnlit, bool isTransparent, bool isAdditive, bool doubleSided, bool vertexColor = true)
         {

@@ -23,6 +23,18 @@ namespace Delvefolk
         public GameObject GateBars;
         public GameObject Spikes;
 
+        [Header("Enemigos (paquete de monstruos)")]
+        public GameObject SlimeModel;
+        public GameObject GoblinModel;
+        public GameObject GrabberModel;
+        public GameObject Crown;
+
+        [Header("Objetos y muebles")]
+        public GameObject Barrel;
+        public GameObject[] Bookshelves;
+        public GameObject[] Tables;
+        public GameObject[] Vases;
+
         [Header("Decoración")]
         public GameObject[] Rubble;
         public GameObject[] Bones;

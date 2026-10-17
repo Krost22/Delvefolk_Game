@@ -10,12 +10,6 @@ namespace Delvefolk.Tests
     {
         Player P1 { get { return G.Players[0]; } }
 
-        void StartRun(int players = 1)
-        {
-            G.Start(players);
-            Step(2);
-        }
-
         void Teleport(Player p, int tx, int tz)
         {
             p.Body.X = Grid.X(tx); p.Body.Z = Grid.Z(tz);

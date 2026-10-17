@@ -52,6 +52,12 @@ namespace Delvefolk
             scaler.matchWidthOrHeight = 0.5f;
             go.AddComponent<GraphicRaycaster>();
             Root = (RectTransform)go.transform;
+            // Clics del ratón en los botones (con el Input System)
+            if (!UnityEngine.EventSystems.EventSystem.current)
+            {
+                var es = new GameObject("EventSystem", typeof(UnityEngine.EventSystems.EventSystem), typeof(UnityEngine.InputSystem.UI.InputSystemUIInputModule));
+                es.transform.SetParent(parent, false);
+            }
 
             vignette = MakeImage(Root, "Vineta", new Color(0, 0, 0, 0f));
             Stretch(vignette.rectTransform);

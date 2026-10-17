@@ -270,7 +270,10 @@ namespace Delvefolk
                 StompMate(q, top);
                 return;
             }
+            CheckStompBarrels(ref done);
         }
+
+        partial void CheckStompBarrels(ref bool done);
 
         void StompMate(Player t, float top)
         {

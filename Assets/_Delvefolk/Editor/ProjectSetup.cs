@@ -99,6 +99,18 @@ namespace Delvefolk.EditorTools
                 cat.Webs = PS("Props/SpiderWeb_01", "Props/SpiderWeb_02");
                 cat.Banners = PS("Props/WallDecor_05", "Props/WallDecor_06", "Props/WallDecor_07", "Props/WallDecor_08");
                 cat.Chains = PS("Props/Chain_01", "Props/Chain_02", "Props/Chain_03");
+                cat.Crown = P("Gold/Crown_01");
+                cat.Barrel = P("Props/Barrel_01");
+                cat.Bookshelves = PS("Props/LibraryWithBooks_01", "Props/LibraryWithBooks_02", "Props/LibraryWithBooks_03", "Props/LibraryWithBooks_04", "Props/LibraryWithBooks_05");
+                cat.Tables = PS("Props/Table_01", "Props/Table_02");
+                cat.Vases = PS("Props/Jug_01", "Props/Jug_02", "Props/Jug_03", "Props/Jug_04", "Props/Jug_05");
+            }
+            const string Monsters = "Assets/Monsters Ultimate Pack 09 Cute Series/";
+            if (AssetDatabase.IsValidFolder("Assets/Monsters Ultimate Pack 09 Cute Series"))
+            {
+                cat.SlimeModel = AssetDatabase.LoadAssetAtPath<GameObject>(Monsters + "Imp Mischief Cute Series/Prefabs/Imp Mischief.prefab");
+                cat.GoblinModel = AssetDatabase.LoadAssetAtPath<GameObject>(Monsters + "Imp Demon Cute Series/Prefabs/Imp Demon.prefab");
+                cat.GrabberModel = AssetDatabase.LoadAssetAtPath<GameObject>(Monsters + "Treant Forest Cute Series/Prefabs/Treant Forest Autumn.prefab");
             }
             if (create) AssetDatabase.CreateAsset(cat, CatalogPath);
             EditorUtility.SetDirty(cat);

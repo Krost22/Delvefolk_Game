@@ -69,6 +69,21 @@ namespace Delvefolk
 
         public bool Flashing { get { return flashT > 0f; } }
 
+        // Brillo fijo (aviso de ataque): mismo canal que el destello, sin temporizador
+        public void SetFlashColor(Color c)
+        {
+            var lin = c.linear;
+            var v = new Vector4(lin.r, lin.g, lin.b, 0f);
+            for (int i = 0; i < flashRenderers.Count; i++)
+            {
+                var r = flashRenderers[i];
+                if (!r) continue;
+                r.GetPropertyBlock(mpb);
+                mpb.SetVector(Mats.FlashId, v);
+                r.SetPropertyBlock(mpb);
+            }
+        }
+
         public void UpdateFlash(float dt)
         {
             if (flashT <= 0f) return;

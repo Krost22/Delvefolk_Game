@@ -15,6 +15,7 @@ Shader "Delvefolk/Flat"
         _FlatShading ("Sombreado plano", Float) = 1
         _Unlit ("Sin iluminación", Float) = 0
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
+        [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("ZTest", Float) = 4
         [HideInInspector] _SrcBlend ("__src", Float) = 1
         [HideInInspector] _DstBlend ("__dst", Float) = 0
         [HideInInspector] _ZWrite ("__zw", Float) = 1
@@ -53,6 +54,7 @@ Shader "Delvefolk/Flat"
             Tags { "LightMode" = "UniversalForward" }
             Blend [_SrcBlend] [_DstBlend]
             ZWrite [_ZWrite]
+            ZTest [_ZTest]
             Cull [_Cull]
 
             HLSLPROGRAM

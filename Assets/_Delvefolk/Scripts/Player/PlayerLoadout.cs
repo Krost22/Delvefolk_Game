@@ -57,4 +57,22 @@ namespace Delvefolk
             Storage.Set("loadout." + Index, s);
         }
     }
+
+    // Ajustes de la partida que elige el anfitrión en la sala (DF.MatchSettings); se guardan en "settings"
+    [System.Serializable]
+    public sealed class MatchSettings
+    {
+        // Pisos bonus: "normal", "always" o "never"
+        public string bonusMode = "normal";
+        public bool exclusiveAbilities = false;
+        public bool swapAllies = true;
+
+        public string BonusMode { get { return bonusMode; } set { bonusMode = value; } }
+        public bool ExclusiveAbilities { get { return exclusiveAbilities; } set { exclusiveAbilities = value; } }
+        public bool SwapAllies { get { return swapAllies; } set { swapAllies = value; } }
+
+        public static MatchSettings Load() { return Storage.Get<MatchSettings>("settings", null) ?? new MatchSettings(); }
+        public void Save() { Storage.Set("settings", this); }
+        public MatchSettings Clone() { return (MatchSettings)MemberwiseClone(); }
+    }
 }

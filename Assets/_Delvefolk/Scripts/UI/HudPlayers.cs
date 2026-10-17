@@ -165,6 +165,10 @@ namespace Delvefolk
         }
 
         public float PlayerBarOf(int i) { return heads[i].BarK; }
+        // Estado de la vida sobre la cabeza (pruebas)
+        public bool HeadShown(int i) { return heads[i].Head.gameObject.activeSelf; }
+        public float HeadFill(int i) { return heads[i].HpFill.fillAmount; }
+        public string HeadName(int i) { return heads[i].Name.text; }
 
         public void HideHeads()
         {

@@ -4,6 +4,9 @@ namespace Delvefolk
     // Las 7 habilidades llegan en la fase 5; mientras tanto el jugador no tiene ninguna activa.
     public sealed partial class AbilityController
     {
+        // Orden del registro de habilidades del original (DF.Abilities.order)
+        public static readonly string[] Order = { "quake", "blast", "charge", "shout", "swap", "magnet", "guard" };
+
         public readonly Player Player;
         public string Id = "quake";
         public float Cd;

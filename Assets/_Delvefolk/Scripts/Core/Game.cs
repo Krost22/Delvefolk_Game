@@ -93,7 +93,10 @@ namespace Delvefolk
 
         void OnPadDisconnect(int i)
         {
-            Toast("🎮 Mando " + (i + 1) + " desconectado. Partida en pausa: vuelve a conectarlo o sigue con el teclado.", 6f);
+            int who = -1;
+            for (int k = 0; k < Players.Count; k++) if (Bindings[k].Kind == DeviceKind.Pad && Bindings[k].Pad == i) { who = k; break; }
+            if (who < 0) return;   // nadie lo usaba
+            Toast("🎮 Mando " + (i + 1) + " desconectado (" + Players[who].Look.Name + "). Partida en pausa: vuelve a conectarlo.", 6f);
             if (State == GameState.Play) TogglePause();
         }
 

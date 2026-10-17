@@ -116,7 +116,7 @@ namespace Delvefolk.Tests
             var e = SpawnAt('G', 68, 66); e.Stun = 5f;
             float hp0 = e.Hp;
             Face(p1, e.X, e.Z); p1.Cooldown = 0f;
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsTrue(p2.IsThrown, "sale volando");
             Assert.IsNull(p1.Carrying);
             bool hit = false;

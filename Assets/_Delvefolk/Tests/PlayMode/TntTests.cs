@@ -66,7 +66,7 @@ namespace Delvefolk.Tests
             p.GrabTnt(t);
             Step(10);
             p.Facing = Mathf.PI / 2f;   // hacia +X
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsNull(p.CarryingTnt, "lanzada");
             Assert.IsTrue(t.FlyT >= 0f, "vuela");
             int guard = 0;
@@ -91,7 +91,7 @@ namespace Delvefolk.Tests
             p1.GrabTnt(t);
             Step(5);
             p1.Facing = Mathf.PI / 2f;
-            Tap("Space");
+            Tap("KeyX");
             int guard = 0;
             while (!t.Dead && guard++ < 240) { PutU(p2, Grid.X(4) + 7f, Grid.Z(12)); Step(1); }
             Assert.IsTrue(t.Dead);

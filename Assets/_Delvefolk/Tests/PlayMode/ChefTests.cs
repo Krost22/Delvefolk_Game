@@ -78,13 +78,13 @@ namespace Delvefolk.Tests
             Begin(); GrabSetup();
             boss.StartPattern(Pattern(boss, "agarrar")); Step(60);
             Assert.AreSame(boss, p1.GrabbedBy);
-            for (int i = 0; i < 14 && p1.GrabbedBy != null; i++) Tap("Space");
+            for (int i = 0; i < 14 && p1.GrabbedBy != null; i++) Tap("KeyX");
             Assert.IsNull(p1.GrabbedBy, "sale machacando mientras lo lleva");
             Step(30);
             GrabSetup();
             boss.StartPattern(Pattern(boss, "agarrar")); Step(180);
             Assert.AreSame(C, p1.GrabbedBy);
-            for (int i = 0; i < 16 && p1.GrabbedBy != null; i++) Tap("Space");
+            for (int i = 0; i < 16 && p1.GrabbedBy != null; i++) Tap("KeyX");
             Assert.IsNull(p1.GrabbedBy, "sale machacando dentro del caldero");
             yield break;
         }
@@ -112,7 +112,7 @@ namespace Delvefolk.Tests
             p1.Hp = 60;
             p1.SetWeapon(WeaponRegistry.Create("rottencheese"));
             p1.Cooldown = 0;
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsNotNull(p1.Eating, "empieza a comer");
             Step(90);
             Assert.That(60f - p1.Hp, Is.InRange(10f, 14f), "unos 12 de daño");
@@ -138,7 +138,7 @@ namespace Delvefolk.Tests
                 Step(1);
                 maxStun = Mathf.Max(maxStun, boss.Stun);
                 var k = knives.FirstOrDefault(kn => kn.Hostile && !kn.Dead && MathUtil.Hypot(kn.PX - p1.X, kn.PZ - p1.Z) < 2.0f);
-                if (k != null && p1.Attack == null) { p1.Cooldown = 0; Tap("Space"); }
+                if (k != null && p1.Attack == null) { p1.Cooldown = 0; Tap("KeyX"); }
             }
             Assert.IsTrue(knives.Any(k => !k.Hostile), "un golpe devuelve una cuchilla");
             for (int i = 0; i < 60; i++) { Step(1); maxStun = Mathf.Max(maxStun, boss.Stun); }

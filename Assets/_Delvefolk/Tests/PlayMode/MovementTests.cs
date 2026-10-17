@@ -100,7 +100,7 @@ namespace Delvefolk.Tests
         public IEnumerator Salto_AlcanzaUnos167PasaPorEncimaYAterriza()
         {
             StartRun();
-            Press("ShiftLeft");
+            Press("Space");
             float maxY = 0f;
             bool wasAirborne = false;
             Step(1);
@@ -123,7 +123,7 @@ namespace Delvefolk.Tests
 
         int JumpAndLand()
         {
-            Press("ShiftLeft");
+            Press("Space");
             int frames = 0;
             Step(1); frames++;
             while (P1.JumpY > 0f && frames < 120) { Step(1); frames++; }
@@ -158,7 +158,7 @@ namespace Delvefolk.Tests
             StartRun();
             P1.Stamina = 0f;
             P1.StaminaT = 0.6f;   // > 0.5 para el aviso, < 0.7 para que aún no se recupere
-            Press("KeyF");
+            Press("Space");
             Step(1);
             Assert.AreEqual(0f, P1.JumpY);
             Assert.IsTrue(G.Ui.HasFloatText("Sin aliento"));

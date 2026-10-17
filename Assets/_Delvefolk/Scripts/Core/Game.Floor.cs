@@ -225,8 +225,7 @@ namespace Delvefolk
             foreach (var p in Players)
             {
                 var c = p.Controls;
-                Player mate = null;
-                foreach (var q in Players) if (q != p) { mate = q; break; }
+                Player mate = MateFor(p);
                 // Agarrado (por un compañero o un enemigo): aviso de forcejeo
                 if (!p.Dead && (p.CarriedBy != null || p.GrabbedBy != null)) { Ui.SetPrompt(p.Index, "¡Machaca {A} {E} para soltarte!"); continue; }
                 if (p.Dead || p.IsThrown || p.Spectator) { Ui.SetPrompt(p.Index, null); continue; }
@@ -259,10 +258,11 @@ namespace Delvefolk
                     float d = MathUtil.Hypot(pk.X - p.X, pk.Z - p.Z);
                     if (d < bestD) { bestD = d; best = pk; }
                 }
-                if (mate != null && !mate.Dead && mate.CarriedBy == null && mate.Carrying == null && !mate.IsThrown && !mate.Spectator && mate.GrabbedBy == null && !mate.Airborne && !p.Airborne)
+                foreach (var q in Players)
                 {
-                    float d = MathUtil.Hypot(mate.X - p.X, mate.Z - p.Z);
-                    if (d < Mathf.Min(bestD, 1.7f)) { bestD = d; bestMate = mate; best = null; }
+                    if (q == p || q.Dead || q.CarriedBy != null || q.Carrying != null || q.CarryingTnt != null || q.IsThrown || q.Spectator || q.GrabbedBy != null || q.Airborne || p.Airborne) continue;
+                    float d = MathUtil.Hypot(q.X - p.X, q.Z - p.Z);
+                    if (d < Mathf.Min(bestD, 1.7f)) { bestD = d; bestMate = q; best = null; }
                 }
                 if (!p.Airborne)
                     foreach (var b in Barrels)
@@ -324,6 +324,21 @@ namespace Delvefolk
                 }
                 else Ui.SetPrompt(p.Index, null);
             }
+        }
+
+        // Compañero para dar de comer o reanimar: primero un derribado cercano, si no el más cercano
+        Player MateFor(Player p)
+        {
+            Player best = null, downed = null;
+            float bd = float.MaxValue, dd = float.MaxValue;
+            foreach (var q in Players)
+            {
+                if (q == p || q.Removed) continue;
+                float d = MathUtil.Hypot(q.X - p.X, q.Z - p.Z);
+                if (q.Dead && d < dd) { dd = d; downed = q; }
+                if (d < bd) { bd = d; best = q; }
+            }
+            return downed != null && dd < 2.5f ? downed : best;
         }
 
         partial void InteractionHooks(Player p, ref bool taken);
@@ -437,8 +452,8 @@ namespace Delvefolk
 
         partial void RetryHooks(CarryState[] carry, ref bool handled);
 
-        static readonly string[] RetryKeys = { "KeyR", "GP0:A", "GP1:A" };
-        static readonly string[] ContinueKeys = { "Space", "Enter", "NumpadEnter", "GP0:A", "GP1:A" };
+        static readonly string[] RetryKeys = { "KeyR", "GP0:A", "GP1:A", "GP2:A", "GP3:A", "GP0:START", "GP1:START", "GP2:START", "GP3:START" };
+        static readonly string[] ContinueKeys = { "Space", "KeyX", "Enter", "NumpadEnter", "GP0:A", "GP1:A", "GP2:A", "GP3:A" };
 
         // Pantallas de derrota y victoria (reintentar / seguir)
         partial void ScreenInput()

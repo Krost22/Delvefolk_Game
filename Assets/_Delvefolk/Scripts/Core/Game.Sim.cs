@@ -132,7 +132,7 @@ namespace Delvefolk
             }
             CameraCtl.Update(dt, center.x, center.y, vx, vz, spread);
             UpdateFog();
-            for (int i = 0; i < Players.Count && i < 2; i++) PlayerLights[i].transform.position = new Vector3(Players[i].X, 2.6f, Players[i].Z);
+            for (int i = 0; i < Players.Count && i < PlayerLights.Length; i++) PlayerLights[i].transform.position = new Vector3(Players[i].X, 2.6f, Players[i].Z);
             Ui.Update(dt);
         }
 

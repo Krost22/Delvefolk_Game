@@ -130,7 +130,7 @@ namespace Delvefolk
         void BuildTitle()
         {
             titleScreen = Overlay("Titulo", 0.55f);
-            var p = Panel(titleScreen, "Tarjeta", new Vector2(640 * Px, 460 * Px));
+            var p = Panel(titleScreen, "Tarjeta", new Vector2(640 * Px, 470 * Px));
             var h1 = Title(p, "DELVEFOLK", 64, 26 * Px);
             h1.characterSpacing = 18f;
             Outline(h1, MathUtil.Hex(0x3a1a08), 0.28f);
@@ -139,8 +139,8 @@ namespace Delvefolk
             // Controles de cada jugador
             string J1 =
                 "<color=#7dd65b><b><cspace=0.15em>Jugador 1</cspace></b></color>\n" +
-                Key("W A S D") + " mover\n" + Key("ESPACIO") + " atacar / comer\n" + Key("E") + " recoger / agarrar\n" +
-                Key("Q") + " habilidad especial\n" + Key("SHIFT izq.") + " saltar";
+                Key("W A S D") + " mover\n" + Key("X") + " atacar / comer\n" + Key("E") + " recoger / agarrar\n" +
+                Key("Z") + " habilidad especial\n" + Key("ESPACIO") + " saltar";
             string J2 =
                 "<color=#5bb0ff><b><cspace=0.15em>Jugador 2</cspace></b></color>\n" +
                 Key("FLECHAS") + " mover\n" + Key("ENTER") + " atacar / comer\n" + Key("SHIFT der.") + " recoger / agarrar\n" +
@@ -153,10 +153,10 @@ namespace Delvefolk
             }
             PlaceIn(c1.rectTransform, 70 * Px, 190 * Px, 250 * Px, 190 * Px);
             PlaceIn(c2.rectTransform, 340 * Px, 190 * Px, 250 * Px, 190 * Px);
-            var tip = Body(p, "Coge <b>lo que sea</b> y lánzalo: armas, comida, TNT... o a tu compañero.", 14, 352 * Px, 24 * Px, TipColor);
+            var tip = Body(p, "Coge <b>lo que sea</b> y lánzalo: armas, comida, TNT... o a tu compañero.\n🎮 Hasta 4 jugadores con mandos: " + Key("A") + " atacar · " + Key("X") + " recoger · " + Key("B") + " saltar · " + Key("Y") + " habilidad", 14, 340 * Px, 44 * Px, TipColor);
             tip.alignment = TextAlignmentOptions.Center;
-            MakeButton(p, "1 jugador <size=70%>(ESPACIO)</size>", 392 * Px, () => g.OpenLobby(1), -130 * Px);
-            MakeButton(p, "2 jugadores <size=70%>(ENTER)</size>", 392 * Px, () => g.OpenLobby(2), 130 * Px);
+            MakeButton(p, "1 jugador <size=70%>(ESPACIO o A)</size>", 400 * Px, () => g.OpenLobby(1), -130 * Px);
+            MakeButton(p, "2 jugadores <size=70%>(ENTER)</size>", 400 * Px, () => g.OpenLobby(2), 130 * Px);
             titleScreen.gameObject.SetActive(false);
         }
 

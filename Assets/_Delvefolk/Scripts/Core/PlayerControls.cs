@@ -2,64 +2,152 @@ using UnityEngine;
 
 namespace Delvefolk
 {
-    // Esquema de control de un jugador: qué teclas/mando le pertenecen
+    // Dispositivo de un jugador: uno de los dos "teclados" (mitad izquierda / mitad derecha) o un mando.
+    // En el teclado solo caben dos jugadores; el J3 y el J4 juegan con mando. Cualquiera puede cambiar.
+    public enum DeviceKind { KeyboardA, KeyboardB, Pad }
+
+    public struct DeviceBinding : System.IEquatable<DeviceBinding>
+    {
+        public DeviceKind Kind;
+        public int Pad;   // hueco de mando (0..3) si Kind == Pad
+
+        public static DeviceBinding KeyA { get { return new DeviceBinding { Kind = DeviceKind.KeyboardA, Pad = -1 }; } }
+        public static DeviceBinding KeyB { get { return new DeviceBinding { Kind = DeviceKind.KeyboardB, Pad = -1 }; } }
+        public static DeviceBinding PadSlot(int n) { return new DeviceBinding { Kind = DeviceKind.Pad, Pad = n }; }
+
+        public bool IsKeyboard { get { return Kind != DeviceKind.Pad; } }
+        public string Label
+        {
+            get
+            {
+                if (Kind == DeviceKind.KeyboardA) return "⌨ Teclado (WASD)";
+                if (Kind == DeviceKind.KeyboardB) return "⌨ Teclado (flechas)";
+                return "🎮 Mando " + (Pad + 1);
+            }
+        }
+
+        public bool Equals(DeviceBinding o) { return Kind == o.Kind && (Kind != DeviceKind.Pad || Pad == o.Pad); }
+        public override bool Equals(object o) { return o is DeviceBinding && Equals((DeviceBinding)o); }
+        public override int GetHashCode() { return (int)Kind * 10 + (Kind == DeviceKind.Pad ? Pad : 0); }
+        public override string ToString() { return Label; }
+    }
+
+    // Esquema de control: qué teclas o botones son de un dispositivo
     public sealed class ControlScheme
     {
-        public string Label, AttackKey, InteractKey, AbilityKey, JumpKey;
+        public string Label, AttackKey, InteractKey, AbilityKey, JumpKey, MoveKeys;
         public string[] Up, Down, Left, Right, Attack, Interact, Ability, Jump;
-        public int Pad;
-        // Navegación de menús: dirección de teclado + la del mando
+        public int Pad = -1;   // hueco de mando cuyo stick mueve (−1: ninguno)
+        // Navegación de menús: dirección de teclado o cruceta/stick del mando
         public string[] MenuUp, MenuDown, MenuLeft, MenuRight;
+        // Unirse a la sala o a la partida desde este dispositivo
+        public string[] Join;
 
         public ControlScheme Init()
         {
-            string gp = "GP" + Pad + ":";
-            MenuUp = Concat(Up, gp + "UP"); MenuDown = Concat(Down, gp + "DOWN");
-            MenuLeft = Concat(Left, gp + "LEFT"); MenuRight = Concat(Right, gp + "RIGHT");
+            if (Pad >= 0)
+            {
+                string gp = "GP" + Pad + ":";
+                MenuUp = new[] { gp + "UP" }; MenuDown = new[] { gp + "DOWN" };
+                MenuLeft = new[] { gp + "LEFT" }; MenuRight = new[] { gp + "RIGHT" };
+                Join = new[] { gp + "A", gp + "START" };
+            }
+            else
+            {
+                MenuUp = Up; MenuDown = Down; MenuLeft = Left; MenuRight = Right;
+                if (Join == null) Join = Attack;
+            }
             return this;
-        }
-
-        static string[] Concat(string[] a, string b)
-        {
-            var r = new string[a.Length + 1];
-            a.CopyTo(r, 0); r[a.Length] = b;
-            return r;
         }
     }
 
     public static class ControlSchemes
     {
-        public static readonly ControlScheme[] All =
+        public const int MaxPlayers = 4, MaxPads = 4;
+
+        // Teclado A (J1): WASD mover · ESPACIO saltar · X atacar · Z habilidad · E recoger
+        public static readonly ControlScheme KeyboardA = new ControlScheme
         {
-            // Jugador 1: WASD + Espacio + E (o mando 1)
-            new ControlScheme
+            Label = "Teclado (WASD)", AttackKey = "X", InteractKey = "E", AbilityKey = "Z", JumpKey = "ESPACIO", MoveKeys = "WASD",
+            Up = new[] { "KeyW" }, Down = new[] { "KeyS" }, Left = new[] { "KeyA" }, Right = new[] { "KeyD" },
+            Attack = new[] { "KeyX" }, Interact = new[] { "KeyE" }, Ability = new[] { "KeyZ" }, Jump = new[] { "Space" },
+            Join = new[] { "KeyX", "Space" },
+        }.Init();
+
+        // Teclado B (J2): flechas + Enter + Shift derecho (o IJKL + O + U)
+        public static readonly ControlScheme KeyboardB = new ControlScheme
+        {
+            Label = "Teclado (flechas)", AttackKey = "ENTER", InteractKey = "SHIFT", AbilityKey = "CTRL der.", JumpKey = "Num3", MoveKeys = "FLECHAS",
+            Up = new[] { "ArrowUp", "KeyI" }, Down = new[] { "ArrowDown", "KeyK" }, Left = new[] { "ArrowLeft", "KeyJ" }, Right = new[] { "ArrowRight", "KeyL" },
+            Attack = new[] { "Enter", "NumpadEnter", "Numpad0", "KeyO" }, Interact = new[] { "ShiftRight", "Numpad1", "KeyU" },
+            Ability = new[] { "ControlRight", "Numpad2", "KeyH" }, Jump = new[] { "Numpad3", "Slash", "KeyY" },
+        }.Init();
+
+        static readonly ControlScheme[] pads = BuildPads();
+
+        static ControlScheme[] BuildPads()
+        {
+            var r = new ControlScheme[MaxPads];
+            for (int n = 0; n < MaxPads; n++)
             {
-                Label = "J1", AttackKey = "ESPACIO", InteractKey = "E", AbilityKey = "Q", JumpKey = "SHIFT izq.",
-                Up = new[] { "KeyW" }, Down = new[] { "KeyS" }, Left = new[] { "KeyA" }, Right = new[] { "KeyD" },
-                Attack = new[] { "Space", "GP0:A" }, Interact = new[] { "KeyE", "GP0:X" }, Ability = new[] { "KeyQ", "GP0:Y", "GP0:RB" },
-                Jump = new[] { "ShiftLeft", "KeyF", "GP0:B", "GP0:LB" }, Pad = 0,
-            }.Init(),
-            // Jugador 2: flechas + Enter + Shift derecho (o IJKL + O + U, o mando 2)
-            new ControlScheme
-            {
-                Label = "J2", AttackKey = "ENTER", InteractKey = "SHIFT", AbilityKey = "CTRL der.", JumpKey = "Num3",
-                Up = new[] { "ArrowUp", "KeyI" }, Down = new[] { "ArrowDown", "KeyK" }, Left = new[] { "ArrowLeft", "KeyJ" }, Right = new[] { "ArrowRight", "KeyL" },
-                Attack = new[] { "Enter", "NumpadEnter", "Numpad0", "KeyO", "GP1:A" }, Interact = new[] { "ShiftRight", "Numpad1", "KeyU", "GP1:X" },
-                Ability = new[] { "ControlRight", "Numpad2", "KeyH", "GP1:Y", "GP1:RB" },
-                Jump = new[] { "Numpad3", "Slash", "KeyY", "GP1:B", "GP1:LB" }, Pad = 1,
-            }.Init(),
-        };
+                string gp = "GP" + n + ":";
+                r[n] = new ControlScheme
+                {
+                    Label = "Mando " + (n + 1), AttackKey = "A", InteractKey = "X", AbilityKey = "Y", JumpKey = "B", MoveKeys = "Stick",
+                    Up = new string[0], Down = new string[0], Left = new string[0], Right = new string[0],
+                    Attack = new[] { gp + "A" }, Interact = new[] { gp + "X" }, Ability = new[] { gp + "Y", gp + "RB" }, Jump = new[] { gp + "B", gp + "LB" },
+                    Pad = n,
+                }.Init();
+            }
+            return r;
+        }
+
+        public static ControlScheme Pad(int n) { return pads[Mathf.Clamp(n, 0, MaxPads - 1)]; }
+
+        public static ControlScheme For(DeviceBinding b)
+        {
+            if (b.Kind == DeviceKind.KeyboardA) return KeyboardA;
+            if (b.Kind == DeviceKind.KeyboardB) return KeyboardB;
+            return Pad(b.Pad);
+        }
+
+        // Dispositivo por defecto de cada hueco: J1 teclado izquierdo, J2 teclado derecho, J3 y J4 mandos 1 y 2
+        public static DeviceBinding DefaultFor(int i)
+        {
+            if (i == 0) return DeviceBinding.KeyA;
+            if (i == 1) return DeviceBinding.KeyB;
+            return DeviceBinding.PadSlot(i - 2);
+        }
+
+        // Todos los dispositivos posibles, en el orden en que se recorren al pulsar "cambiar control"
+        public static DeviceBinding[] AllDevices()
+        {
+            var r = new DeviceBinding[2 + MaxPads];
+            r[0] = DeviceBinding.KeyA; r[1] = DeviceBinding.KeyB;
+            for (int n = 0; n < MaxPads; n++) r[2 + n] = DeviceBinding.PadSlot(n);
+            return r;
+        }
+
+        // Texto corto de controles para un dispositivo (paneles, sala)
+        public static string Help(ControlScheme s)
+        {
+            return s.MoveKeys + " · " + s.AttackKey + " atacar · " + s.JumpKey + " saltar";
+        }
     }
 
-    // Controles de un jugador sobre el InputHub compartido
+    // Controles de un jugador sobre el InputHub compartido (el dispositivo se puede cambiar en la sala)
     public sealed class PlayerControls
     {
         public readonly InputHub Input;
-        public readonly ControlScheme S;
-        // En solitario el J1 también puede moverse con las flechas (esquema alternativo)
+        public ControlScheme S { get; private set; }
+        public DeviceBinding Binding { get; private set; }
+        // En solitario con el teclado izquierdo, el J1 también puede moverse con las flechas
         public ControlScheme Alt;
 
-        public PlayerControls(InputHub input, ControlScheme scheme) { Input = input; S = scheme; }
+        public PlayerControls(InputHub input, DeviceBinding binding) { Input = input; Bind(binding); }
+        public PlayerControls(InputHub input, ControlScheme scheme) { Input = input; S = scheme; Binding = scheme.Pad >= 0 ? DeviceBinding.PadSlot(scheme.Pad) : scheme == ControlSchemes.KeyboardB ? DeviceBinding.KeyB : DeviceBinding.KeyA; }
+
+        public void Bind(DeviceBinding b) { Binding = b; S = ControlSchemes.For(b); }
 
         bool Dir(string[] keys, string[] alt) { return Input.AnyDown(keys) || (alt != null && Input.AnyDown(alt)); }
 
@@ -68,9 +156,11 @@ namespace Delvefolk
             var a = Alt;
             float x = (Dir(S.Right, a != null ? a.Right : null) ? 1f : 0f) - (Dir(S.Left, a != null ? a.Left : null) ? 1f : 0f);
             float y = (Dir(S.Up, a != null ? a.Up : null) ? 1f : 0f) - (Dir(S.Down, a != null ? a.Down : null) ? 1f : 0f);
-            var pad = Input.Pads[S.Pad];
-            // El stick del mando, si se mueve, sustituye al teclado
-            if (pad.Connected && (pad.X != 0f || pad.Y != 0f)) { x = pad.X; y = pad.Y; }
+            if (S.Pad >= 0)
+            {
+                var pad = Input.Pads[S.Pad];
+                if (pad.X != 0f || pad.Y != 0f) { x = pad.X; y = pad.Y; }
+            }
             return new Vector2(x, y);
         }
 
@@ -84,6 +174,8 @@ namespace Delvefolk
         public bool ConsumeAbility() { return Input.ConsumeAny(S.Ability); }
         public bool JumpPressed() { return Input.AnyPressed(S.Jump); }
         public bool ConsumeJump() { return Input.ConsumeAny(S.Jump); }
+        // Confirmar en menús y pantallas: atacar o saltar
+        public bool ConsumeConfirm() { bool a = ConsumeAttack(); bool j = ConsumeJump(); return a || j; }
 
         // Navegación de menús (sala de preparación): consume la pulsación de una dirección
         public bool MenuPressed(int dir)

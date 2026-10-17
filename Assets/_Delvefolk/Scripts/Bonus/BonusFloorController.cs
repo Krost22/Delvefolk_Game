@@ -109,7 +109,7 @@ namespace Delvefolk
             OverlayT -= dt;
             foreach (var p in G.Players)
             {
-                if (p.Controls.ConsumeAttack() || p.Controls.ConsumeInteract())
+                if (p.Controls.ConsumeConfirm() || p.Controls.ConsumeInteract())
                 {
                     Confirmed.Add(p.Index);
                     G.Audio.Play("pickup");

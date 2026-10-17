@@ -10,11 +10,15 @@ namespace Delvefolk
     public sealed class PadState
     {
         public bool Connected;
+        public string Name = "";
+        public int DeviceId = -1;          // dispositivo del Input System asignado a este hueco
         public float X, Y;
         public readonly bool[] Buttons = new bool[InputHub.PadButtonNames.Length];
     }
 
-    // Teclado + mandos. Guarda teclas mantenidas (down) y pulsaciones de este frame (pressed).
+    // Teclado + mandos (Input System). Guarda teclas mantenidas (down) y pulsaciones de este frame (pressed).
+    // Hasta 4 mandos de cualquier tipo (Xbox, PlayStation, Switch Pro, genéricos y joysticks HID): cada uno ocupa
+    // un hueco fijo (GP0..GP3) desde que se conecta hasta que se desconecta, aunque entren o salgan otros.
     // Cada tecla y botón es un código virtual ("KeyE", "Space", "GP0:A") para tratarlos igual.
     // Las pruebas inyectan la entrada con Press/Hold/Release y desactivan la lectura de dispositivos.
     public sealed class InputHub
@@ -24,17 +28,19 @@ namespace Delvefolk
 
         // Códigos con el mismo nombre que KeyboardEvent.code del original (posición física de la tecla)
         static readonly KeyValuePair<Key, string>[] KeyMap = BuildKeyMap();
-        static readonly string[][] PadCodes = { BuildPadCodes(0), BuildPadCodes(1) };
+        public const int MaxPads = 4;
+        static readonly string[][] PadCodes = { BuildPadCodes(0), BuildPadCodes(1), BuildPadCodes(2), BuildPadCodes(3) };
 
         readonly HashSet<string> down = new HashSet<string>();
         readonly HashSet<string> pressed = new HashSet<string>();
-        public readonly PadState[] Pads = { new PadState(), new PadState() };
+        public readonly PadState[] Pads = { new PadState(), new PadState(), new PadState(), new PadState() };
 
         // false en las pruebas: solo cuenta la entrada inyectada
         public bool ReadDevices = true;
         // Rueda del ratón en este frame (positiva = hacia arriba, alejándose del usuario)
         public float Wheel;
         public event Action<int> PadDisconnected;
+        public event Action<int> PadConnected;
 
         static KeyValuePair<Key, string>[] BuildKeyMap()
         {
@@ -127,45 +133,116 @@ namespace Delvefolk
             PollPads();
         }
 
+        // Mandos y joysticks conectados ahora mismo (los gamepads también son joysticks para el Input System: sin repetir)
+        readonly List<InputDevice> devices = new List<InputDevice>();
+        readonly List<ButtonControl> joyButtons = new List<ButtonControl>();
+
         void PollPads()
         {
-            var all = Gamepad.all;
-            for (int i = 0; i < 2; i++)
+            devices.Clear();
+            foreach (var gp in Gamepad.all) if (gp.added) devices.Add(gp);
+            foreach (var js in Joystick.all) if (js.added && !(js is Gamepad)) devices.Add(js);
+            // Huecos cuyo mando ya no está: se liberan (y se avisa al juego)
+            for (int i = 0; i < MaxPads; i++)
             {
-                Gamepad gp = i < all.Count ? all[i] : null;
-                PadState cur = Pads[i];
-                bool wasConnected = cur.Connected;
-                string[] codes = PadCodes[i];
-                if (gp != null)
-                {
-                    cur.Connected = true;
-                    Vector2 st = gp.leftStick.ReadValue();
-                    float x = st.x, y = st.y;
-                    if (Mathf.Sqrt(x * x + y * y) < 0.25f) { x = 0; y = 0; }
-                    if (gp.dpad.up.isPressed) y = 1; if (gp.dpad.down.isPressed) y = -1;
-                    if (gp.dpad.left.isPressed) x = -1; if (gp.dpad.right.isPressed) x = 1;
-                    cur.X = x; cur.Y = y;
-                    SetButton(cur, codes, BA, gp.buttonSouth.isPressed);
-                    SetButton(cur, codes, BB, gp.buttonEast.isPressed);
-                    SetButton(cur, codes, BX, gp.buttonWest.isPressed);
-                    SetButton(cur, codes, BY, gp.buttonNorth.isPressed);
-                    SetButton(cur, codes, BLB, gp.leftShoulder.isPressed);
-                    SetButton(cur, codes, BRB, gp.rightShoulder.isPressed);
-                    SetButton(cur, codes, BSTART, gp.startButton.isPressed);
-                    // Cruceta y stick como pulsaciones virtuales (para menús)
-                    SetButton(cur, codes, BUP, cur.Y > 0.6f);
-                    SetButton(cur, codes, BDOWN, cur.Y < -0.6f);
-                    SetButton(cur, codes, BLEFT, x < -0.6f);
-                    SetButton(cur, codes, BRIGHT, x > 0.6f);
-                }
-                else
-                {
-                    cur.Connected = false; cur.X = 0; cur.Y = 0;
-                    for (int b = 0; b < cur.Buttons.Length; b++) { cur.Buttons[b] = false; down.Remove(codes[b]); }
-                }
-                // Un mando que estaba conectado desaparece: se avisa al juego (pausa automática)
-                if (wasConnected && !cur.Connected && PadDisconnected != null) PadDisconnected(i);
+                var cur = Pads[i];
+                if (cur.DeviceId < 0) continue;
+                bool present = false;
+                foreach (var d in devices) if (d.deviceId == cur.DeviceId) { present = true; break; }
+                if (present) continue;
+                ReleasePad(i);
+                if (PadDisconnected != null) PadDisconnected(i);
             }
+            // Mandos nuevos: al primer hueco libre
+            foreach (var d in devices)
+            {
+                bool known = false;
+                for (int i = 0; i < MaxPads; i++) if (Pads[i].DeviceId == d.deviceId) { known = true; break; }
+                if (known) continue;
+                for (int i = 0; i < MaxPads; i++)
+                {
+                    if (Pads[i].DeviceId >= 0) continue;
+                    Pads[i].DeviceId = d.deviceId;
+                    Pads[i].Connected = true;
+                    Pads[i].Name = string.IsNullOrEmpty(d.displayName) ? d.name : d.displayName;
+                    if (PadConnected != null) PadConnected(i);
+                    break;
+                }
+            }
+            for (int i = 0; i < MaxPads; i++)
+            {
+                var cur = Pads[i];
+                if (cur.DeviceId < 0) continue;
+                InputDevice dev = null;
+                foreach (var d in devices) if (d.deviceId == cur.DeviceId) { dev = d; break; }
+                var gp = dev as Gamepad;
+                if (gp != null) ReadGamepad(cur, PadCodes[i], gp);
+                else ReadJoystick(cur, PadCodes[i], dev as Joystick);
+            }
+        }
+
+        void ReleasePad(int i)
+        {
+            var cur = Pads[i];
+            cur.Connected = false; cur.DeviceId = -1; cur.Name = ""; cur.X = 0; cur.Y = 0;
+            string[] codes = PadCodes[i];
+            for (int b = 0; b < cur.Buttons.Length; b++) { cur.Buttons[b] = false; down.Remove(codes[b]); }
+        }
+
+        void ReadGamepad(PadState cur, string[] codes, Gamepad gp)
+        {
+            Vector2 st = gp.leftStick.ReadValue();
+            float x = st.x, y = st.y;
+            if (Mathf.Sqrt(x * x + y * y) < 0.25f) { x = 0; y = 0; }
+            if (gp.dpad.up.isPressed) y = 1; if (gp.dpad.down.isPressed) y = -1;
+            if (gp.dpad.left.isPressed) x = -1; if (gp.dpad.right.isPressed) x = 1;
+            cur.X = x; cur.Y = y;
+            SetButton(cur, codes, BA, gp.buttonSouth.isPressed);
+            SetButton(cur, codes, BB, gp.buttonEast.isPressed);
+            SetButton(cur, codes, BX, gp.buttonWest.isPressed);
+            SetButton(cur, codes, BY, gp.buttonNorth.isPressed);
+            SetButton(cur, codes, BLB, gp.leftShoulder.isPressed || gp.leftTrigger.isPressed);
+            SetButton(cur, codes, BRB, gp.rightShoulder.isPressed || gp.rightTrigger.isPressed);
+            SetButton(cur, codes, BSTART, gp.startButton.isPressed);
+            SetDirections(cur, codes);
+        }
+
+        // Joystick HID genérico: stick (o cruceta) para moverse; gatillo = A y el resto de botones en orden B, X, Y, LB, RB, START
+        void ReadJoystick(PadState cur, string[] codes, Joystick js)
+        {
+            if (js == null) return;
+            Vector2 st = js.stick != null ? js.stick.ReadValue() : Vector2.zero;
+            float x = st.x, y = st.y;
+            if (Mathf.Sqrt(x * x + y * y) < 0.25f) { x = 0; y = 0; }
+            var hat = js.hatswitch;
+            if (hat != null)
+            {
+                var h = hat.ReadValue();
+                if (h.y > 0.5f) y = 1; if (h.y < -0.5f) y = -1;
+                if (h.x < -0.5f) x = -1; if (h.x > 0.5f) x = 1;
+            }
+            cur.X = x; cur.Y = y;
+            joyButtons.Clear();
+            foreach (var c in js.allControls)
+            {
+                var bc = c as ButtonControl;
+                if (bc == null || bc.synthetic || bc == js.trigger) continue;
+                if (bc.parent is StickControl || bc.parent is DpadControl || bc.parent is Vector2Control) continue;
+                joyButtons.Add(bc);
+            }
+            int[] order = { BB, BX, BY, BLB, BRB, BSTART };
+            SetButton(cur, codes, BA, js.trigger != null && js.trigger.isPressed);
+            for (int k = 0; k < order.Length; k++) SetButton(cur, codes, order[k], k < joyButtons.Count && joyButtons[k].isPressed);
+            SetDirections(cur, codes);
+        }
+
+        // Cruceta y stick como pulsaciones virtuales (para menús)
+        void SetDirections(PadState cur, string[] codes)
+        {
+            SetButton(cur, codes, BUP, cur.Y > 0.6f);
+            SetButton(cur, codes, BDOWN, cur.Y < -0.6f);
+            SetButton(cur, codes, BLEFT, cur.X < -0.6f);
+            SetButton(cur, codes, BRIGHT, cur.X > 0.6f);
         }
 
         void SetButton(PadState pad, string[] codes, int b, bool on)

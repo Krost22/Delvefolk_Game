@@ -22,13 +22,14 @@ namespace Delvefolk
             public bool Visible = true;
         }
 
-        readonly HeadUi[] heads = new HeadUi[2];
+        readonly HeadUi[] heads = new HeadUi[ControlSchemes.MaxPlayers];
         bool headsHidden;
+        readonly Vector2?[] promptAt = new Vector2?[ControlSchemes.MaxPlayers];
         const float BarW = 64f, BarH = 8f;
 
         partial void InitExtra()
         {
-            for (int i = 0; i < 2; i++) heads[i] = MakeHead(i);
+            for (int i = 0; i < heads.Length; i++) heads[i] = MakeHead(i);
             InitPanels();
         }
 
@@ -139,7 +140,7 @@ namespace Delvefolk
             if (text == u.PromptRaw) return;
             u.PromptRaw = text;
             if (string.IsNullOrEmpty(text)) { u.Prompt.gameObject.SetActive(false); return; }
-            var s = ControlSchemes.All[i];
+            var s = g.SchemeOf(i);
             string html = text.Replace("{A}", Key(s.AttackKey)).Replace("{E}", Key(s.InteractKey)).Replace("{J}", Key(s.JumpKey));
             if (html.IndexOf("<mark", System.StringComparison.Ordinal) < 0) html = Key(s.InteractKey) + " " + html;
             u.PromptText.text = html;
@@ -174,7 +175,7 @@ namespace Delvefolk
         public void HideHeads()
         {
             headsHidden = true;
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < heads.Length; i++)
             {
                 heads[i].Head.gameObject.SetActive(false);
                 heads[i].Bar.gameObject.SetActive(false);
@@ -188,9 +189,8 @@ namespace Delvefolk
         {
             var players = g.Players;
             bool inMenu = g.State == GameState.Title || g.State == GameState.Lobby;
-            Vector2 p0 = Vector2.zero, p1 = Vector2.zero;
-            bool has0 = false, has1 = false;
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < heads.Length; i++) promptAt[i] = null;
+            for (int i = 0; i < heads.Length; i++)
             {
                 var u = heads[i];
                 Player pl = i < players.Count ? players[i] : null;
@@ -231,20 +231,25 @@ namespace Delvefolk
                 if (u.PromptRaw != null)
                 {
                     PlaceAt(u.Prompt, new Vector3(pl.X, carried ? 3.9f : 2.9f, pl.Z));
-                    if (i == 0) { p0 = u.Prompt.anchoredPosition; has0 = true; } else { p1 = u.Prompt.anchoredPosition; has1 = true; }
+                    promptAt[i] = u.Prompt.anchoredPosition;
                     u.Prompt.anchoredPosition += new Vector2(0, u.Prompt.sizeDelta.y / 2f);
                 }
                 // Fantasma de la vida: baja a 0.6/s tras el daño
                 u.Ghost = u.Ghost > u.HpK ? Mathf.Max(u.HpK, u.Ghost - dt * 0.6f) : u.HpK;
             }
-            // Si los dos avisos quedarían uno encima del otro, se separan a izquierda y derecha
-            if (has0 && has1 && Mathf.Abs(p0.x - p1.x) < 260 && Mathf.Abs(p0.y - p1.y) < 40)
-            {
-                bool leftFirst = p0.x <= p1.x;
-                var a = heads[0].Prompt; var b = heads[1].Prompt;
-                a.anchoredPosition += new Vector2((leftFirst ? -1 : 1) * (a.sizeDelta.x / 2f + 4), 0);
-                b.anchoredPosition += new Vector2((leftFirst ? 1 : -1) * (b.sizeDelta.x / 2f + 4), 0);
-            }
+            // Si dos avisos quedarían uno encima del otro, se separan a izquierda y derecha (por parejas)
+            for (int i = 0; i < heads.Length; i++)
+                for (int j = i + 1; j < heads.Length; j++)
+                {
+                    if (promptAt[i] == null || promptAt[j] == null) continue;
+                    Vector2 p0 = promptAt[i].Value, p1 = promptAt[j].Value;
+                    if (Mathf.Abs(p0.x - p1.x) >= 260 || Mathf.Abs(p0.y - p1.y) >= 40) continue;
+                    bool leftFirst = p0.x <= p1.x;
+                    var a = heads[i].Prompt; var b = heads[j].Prompt;
+                    a.anchoredPosition += new Vector2((leftFirst ? -1 : 1) * (a.sizeDelta.x / 2f + 4), 0);
+                    b.anchoredPosition += new Vector2((leftFirst ? 1 : -1) * (b.sizeDelta.x / 2f + 4), 0);
+                    promptAt[j] = null;
+                }
             UpdatePanels(dt);
         }
 

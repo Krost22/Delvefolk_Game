@@ -106,7 +106,7 @@ namespace Delvefolk.Tests
             for (int i = 0; i < 30 && pr.Hostile; i++)
             {
                 Step(1);
-                if (Mathf.Abs(pr.PZ - p1.Z) < 2.2f && p1.Attack == null) { p1.Cooldown = 0; Tap("Space"); }
+                if (Mathf.Abs(pr.PZ - p1.Z) < 2.2f && p1.Attack == null) { p1.Cooldown = 0; Tap("KeyX"); }
             }
             Assert.IsFalse(pr.Hostile, "el golpe devuelve el proyectil");
             Step(40);

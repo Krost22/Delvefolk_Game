@@ -25,7 +25,7 @@ namespace Delvefolk.Tests
             var e = G.SpawnEnemy('S', p.X, p.Z + 1.6f); e.Wake(false); e.SetState(EnemyState.Chase);
             float hp0 = e.Hp;
             Face(p, e.X, e.Z);
-            Tap("Space"); Step(30);
+            Tap("KeyX"); Step(30);
             Assert.Greater(hp0 - e.Hp, 0f, "el golpe hace daño");
             Assert.Less(p.Weapon.Durability, 14f, "gasta durabilidad");
             // Unas púas cualquiera del piso
@@ -62,7 +62,7 @@ namespace Delvefolk.Tests
                 PutU(p, rack.X, rack.Z);   // la física lo aparta del cuerpo estático
                 Step(2);
                 Face(p, rack.X, rack.Z); p.Cooldown = 0f;
-                Tap("Space"); Step(40); swings++;
+                Tap("KeyX"); Step(40); swings++;
             }
             Assert.IsTrue(rack.Dead, "el armero se rompe a golpes (" + swings + " golpes)");
             Assert.GreaterOrEqual(G.Pickups.Count - before, 1, "suelta al menos un arma");
@@ -91,7 +91,7 @@ namespace Delvefolk.Tests
                 var e = SpawnAt('L', 68, 68.2f); e.Cfg.StunMult = 1f;
                 float hp0 = e.Hp, dur0 = p.Weapon.Durability;
                 Face(p, e.X, e.Z); p.Cooldown = 0f;
-                Tap("Space"); Step(30);
+                Tap("KeyX"); Step(30);
                 float dmg = hp0 - e.Hp;
                 if (id == "book") { Assert.GreaterOrEqual(dmg, 14f); Assert.Greater(e.Stun, 0.5f, "el tomo aturde mucho"); }
                 else Assert.GreaterOrEqual(dmg, 11f);
@@ -131,7 +131,7 @@ namespace Delvefolk.Tests
             StartRun(1);
             var p = P1;
             Put(p, 68, 70);
-            Tap("ShiftLeft"); Step(9);
+            Tap("Space"); Step(9);
             Assert.Greater(p.JumpY, 0.5f); Assert.IsTrue(p.Body.Airborne);
             Step(60);
             Assert.AreEqual(0f, p.JumpY); Assert.IsFalse(p.Body.Airborne);
@@ -235,7 +235,7 @@ namespace Delvefolk.Tests
             Assert.IsNull(G.Combat.FindAimTarget(p2, 99f, Mathf.Atan2(p1.X - p2.X, p1.Z - p2.Z)) as object == p1 ? null : null);
             float hp0 = p1.Hp; Step(80);
             Assert.GreaterOrEqual(hp0 - p1.Hp, 6f, "le estruja");
-            for (int i = 0; i < 12 && p1.GrabbedBy != null; i++) Tap("Space");
+            for (int i = 0; i < 12 && p1.GrabbedBy != null; i++) Tap("KeyX");
             Assert.IsNull(p1.GrabbedBy, "machacando se suelta");
             Assert.IsNull(e.Held);
             Assert.Greater(e.Stun, 0.5f, "el Abrazón queda aturdido");
@@ -374,7 +374,7 @@ namespace Delvefolk.Tests
             Tap("KeyE");
             Assert.AreEqual(GameState.Win, G.State);
             Assert.AreEqual("win", G.Ui.ShownScreen);
-            Press("Space"); Step(1);
+            Press("KeyX"); Step(1);
             Assert.AreEqual(GameState.Play, G.State);
             Assert.AreEqual(3, G.Floor);
             Assert.AreEqual(1.25f, G.HpMult, 1e-5f);
@@ -441,7 +441,7 @@ namespace Delvefolk.Tests
             var p = P1;
             p.Hp = 50f;
             p.SetWeapon(WeaponRegistry.Create("cheese"));
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsTrue(p.IsEating);
             Step(20);
             p.Iframes = 0f;
@@ -449,7 +449,7 @@ namespace Delvefolk.Tests
             Assert.IsFalse(p.IsEating, "un golpe interrumpe la comida");
             Assert.AreEqual("cheese", p.Weapon.Id, "la comida sigue en la mano");
             Step(40);
-            Tap("Space");
+            Tap("KeyX");
             Step(70);
             Assert.AreEqual(65f, p.Hp, "+20 del queso (tras perder 5)");
             Assert.AreEqual("fists", p.Weapon.Id);
@@ -457,7 +457,7 @@ namespace Delvefolk.Tests
             p.Hp = p.MaxHp;
             p.SetWeapon(WeaponRegistry.Create("chicken"));
             Step(30);
-            Tap("Space"); Step(1);
+            Tap("KeyX"); Step(1);
             Assert.IsFalse(p.IsEating);
             Assert.IsTrue(G.Ui.HasFloatText("Estoy lleno"));
             yield break;

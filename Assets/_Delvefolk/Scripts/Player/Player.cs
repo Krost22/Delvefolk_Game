@@ -27,6 +27,8 @@ namespace Delvefolk
         {
             new PlayerLook(0x5b7f3c, 0x7dd65b, "pot", "J1"),
             new PlayerLook(0x3c6a9f, 0x5bb0ff, "funnel", "J2"),
+            new PlayerLook(0xd0702a, 0xffa94a, "helmet", "J3"),
+            new PlayerLook(0x6a3a7a, 0xc77dff, "hood", "J4"),
         };
 
         public readonly int Index;
@@ -73,7 +75,7 @@ namespace Delvefolk
         {
             Index = index;
             Look = Looks[index];
-            Controls = new PlayerControls(g.Input, ControlSchemes.All[index]);
+            Controls = new PlayerControls(g.Input, g.Bindings[index]);
             Body.PitSolid = () => true;   // el jugador nunca se cae al foso por accidente
             Body.OnBodyImpact = OnBodyImpact;
             Body.OnWallImpact = OnWallImpact;

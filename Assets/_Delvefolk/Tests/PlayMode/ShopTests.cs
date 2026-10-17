@@ -66,7 +66,7 @@ namespace Delvefolk.Tests
             Player p1 = G.Players[0], p2 = G.Players[1];
             PutU(p1, k.X, k.Z - 1.6f);
             Assert.IsNull(G.Combat.FindAimTarget(p1, p1.Weapon.AttackRange, Mathf.PI), "la asistencia de puntería ignora al duende tranquilo");
-            Face(p1, k.X, k.Z); p1.Cooldown = 0; Tap("Space"); Step(20);
+            Face(p1, k.X, k.Z); p1.Cooldown = 0; Tap("KeyX"); Step(20);
             Assert.IsFalse(k.Peaceful, "golpearle lo enfada");
             Assert.GreaterOrEqual(k.MaxHp, 300f);
             Assert.IsFalse(sh.Open, "la tienda cierra");
@@ -119,7 +119,7 @@ namespace Delvefolk.Tests
             p1.SetWeapon(WeaponRegistry.Create("shotgun"));
             Put(p1, 68, 72);
             var e = SpawnAt('L', 68, 66); e.Hp = e.MaxHp = 9999; e.Stun = 99;
-            System.Action fire = () => { p1.Cooldown = 0; p1.Attack = null; Face(p1, e.X, e.Z); Tap("Space"); Step(40); e.Stun = 99; Put(e, 68, 66); Put(p1, 68, 72); };
+            System.Action fire = () => { p1.Cooldown = 0; p1.Attack = null; Face(p1, e.X, e.Z); Tap("KeyX"); Step(40); e.Stun = 99; Put(e, 68, 66); Put(p1, 68, 72); };
             float hp0 = e.Hp; fire();
             Assert.GreaterOrEqual(hp0 - e.Hp, 9f, "dispara a 6 m");
             var sg = (ShotgunWeapon)p1.Weapon;
@@ -152,7 +152,7 @@ namespace Delvefolk.Tests
             {
                 p.SetWeapon(WeaponRegistry.Create(id)); Put(p, 68, 70); p.Facing = 0f;   // π del web: hacia −z del web
                 var en = SpawnAt('L', 68, 70 - dist); en.Hp = en.MaxHp = 9999; en.Stun = 99;
-                float h0 = en.Hp; p.Cooldown = 0; Tap("Space"); Step(60);
+                float h0 = en.Hp; p.Cooldown = 0; Tap("KeyX"); Step(60);
                 float d = h0 - en.Hp; en.Destroy(); G.Enemies.Clear(); return d;
             };
             Assert.GreaterOrEqual(hitWith("spear", 3.9f), 15f, "la lanza llega a 3,9");
@@ -162,7 +162,7 @@ namespace Delvefolk.Tests
             p.SetWeapon(WeaponRegistry.Create("sword")); Put(p, 68, 70); p.Facing = 0f;
             var e = SpawnAt('L', 68, 71.6f); e.Hp = e.MaxHp = 9999; e.Stun = 99;
             var hits = new float[3];
-            for (int i = 0; i < 3; i++) { float h = e.Hp; p.Cooldown = 0; p.Facing = 0f; Tap("Space"); Step(14); e.Stun = 99; Put(e, 68, 71.6f); hits[i] = h - e.Hp; }
+            for (int i = 0; i < 3; i++) { float h = e.Hp; p.Cooldown = 0; p.Facing = 0f; Tap("KeyX"); Step(14); e.Stun = 99; Put(e, 68, 71.6f); hits[i] = h - e.Hp; }
             Assert.AreEqual(0f, hits[0], "golpe 1 no da detrás"); Assert.AreEqual(0f, hits[1], "golpe 2 tampoco");
             Assert.Greater(hits[2], 0f, "el torbellino sí");
             yield break;

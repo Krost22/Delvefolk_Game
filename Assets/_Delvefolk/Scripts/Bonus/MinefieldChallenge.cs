@@ -20,8 +20,8 @@ namespace Delvefolk
         public int Target, Strikes, Mistakes;
         public float TimeLeft;
         CellVis[] cellVis;
-        public readonly MeshRenderer[] Cursors = new MeshRenderer[2];
-        public readonly int[] CursorCell = { -1, -1 };   // índice de la losa a la que apunta cada jugador (−1: ninguna)
+        public readonly MeshRenderer[] Cursors = new MeshRenderer[ControlSchemes.MaxPlayers];
+        public readonly int[] CursorCell = { -1, -1, -1, -1 };   // índice de la losa a la que apunta cada jugador (−1: ninguna)
         public ChestProp Chest;
         static Mesh plateMesh, cursorMesh;
         static readonly string[] NumColors = { null, "#5bb0ff", "#7dd65b", "#ff5a4a", "#c080ff", "#ff9a2a", "#40e0d0", "#ffffff", "#aaaaaa" };
@@ -128,7 +128,7 @@ namespace Delvefolk
                 }
             // Cursor de cada jugador (marco cuadrado de su color)
             if (!cursorMesh) cursorMesh = new MeshBuilder().Add(ProcMesh.Ring(0.98f, 1.2f, 4, 1, Mathf.PI / 4f).RotateX(-Mathf.PI / 2f), Vector3.zero, Color.white).ToMesh("cursorMina");
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < ControlSchemes.MaxPlayers; i++)
             {
                 var go = CharacterModel.MeshObject(Root, "Cursor" + (i + 1), cursorMesh, Mats.Transparent, Vector3.zero);
                 go.SetActive(false);
@@ -369,7 +369,7 @@ namespace Delvefolk
             }
             if (TimeLeft <= 0f) { Finish(false, "Se acabó el tiempo"); return; }
             // Cursores
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < ControlSchemes.MaxPlayers; i++)
             {
                 int aim = CursorCell[i];
                 var m = Cursors[i];

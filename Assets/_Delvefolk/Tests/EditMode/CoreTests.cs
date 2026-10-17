@@ -98,28 +98,43 @@ namespace Delvefolk.Tests
         public void Controles_EjeDeTecladoYEsquemaAlternativo()
         {
             var input = new InputHub { ReadDevices = false };
-            var c = new PlayerControls(input, ControlSchemes.All[0]);
+            var c = new PlayerControls(input, DeviceBinding.KeyA);
             input.Hold("KeyW"); input.Hold("KeyD");
             Assert.AreEqual(new Vector2(1, 1), c.Axis());
             input.Clear();
             input.Hold("ArrowLeft");
             Assert.AreEqual(Vector2.zero, c.Axis());           // sin alternativo, las flechas no son del J1
-            c.Alt = ControlSchemes.All[1];
+            c.Alt = ControlSchemes.KeyboardB;
             Assert.AreEqual(new Vector2(-1, 0), c.Axis());     // en solitario el J1 también usa las flechas
+            // J1 en teclado: X ataca, ESPACIO salta, Z habilidad, E recoger
+            input.Press("KeyX"); Assert.IsTrue(c.AttackPressed());
+            input.Press("Space"); Assert.IsTrue(c.JumpPressed()); Assert.IsFalse(c.InteractPressed());
+            input.Press("KeyZ"); Assert.IsTrue(c.AbilityPressed());
+            input.Press("KeyE"); Assert.IsTrue(c.InteractPressed());
+            input.Clear();
             input.Press("Enter");
-            var c2 = new PlayerControls(input, ControlSchemes.All[1]);
+            var c2 = new PlayerControls(input, DeviceBinding.KeyB);
             Assert.IsTrue(c2.AttackPressed());
             Assert.IsFalse(c.AttackPressed());
+            // Un mando: sus botones y la cruceta para los menús; el teclado no le afecta
+            var cp = new PlayerControls(input, DeviceBinding.PadSlot(1));
             input.Press("GP1:UP");
-            Assert.IsTrue(c2.MenuPressed(0));
-            // El stick del mando, si se mueve, sustituye al teclado; Clear lo suelta
+            Assert.IsTrue(cp.MenuPressed(0));
+            input.Press("GP1:A"); Assert.IsTrue(cp.AttackPressed()); Assert.IsFalse(c.AttackPressed());
+            // El stick mueve al jugador del mando; Clear lo suelta (el mando sigue conectado)
             input.Clear();
             input.Hold("KeyW");
-            input.Pads[0].Connected = true; input.Pads[0].X = 0.6f; input.Pads[0].Y = -0.8f;
-            Assert.AreEqual(new Vector2(0.6f, -0.8f), c.Axis());
+            input.Pads[1].Connected = true; input.Pads[1].X = 0.6f; input.Pads[1].Y = -0.8f;
+            Assert.AreEqual(new Vector2(0.6f, -0.8f), cp.Axis());
+            Assert.AreEqual(new Vector2(0, 1), c.Axis(), "el stick no mueve al del teclado");
             input.Clear();
-            Assert.AreEqual(Vector2.zero, c.Axis());
-            Assert.IsTrue(input.Pads[0].Connected);
+            Assert.AreEqual(Vector2.zero, cp.Axis());
+            Assert.IsTrue(input.Pads[1].Connected);
+            // Cambiar de dispositivo
+            c.Bind(DeviceBinding.PadSlot(1));
+            Assert.AreEqual(ControlSchemes.Pad(1), c.S);
+            Assert.AreEqual(4, ControlSchemes.MaxPlayers);
+            Assert.AreEqual(6, ControlSchemes.AllDevices().Length, "2 teclados + 4 mandos");
         }
 
         [Test]

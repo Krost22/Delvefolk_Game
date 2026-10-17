@@ -40,7 +40,7 @@ namespace Delvefolk.Tests
             Step(60);
             Assert.AreNotEqual(t0, G.CameraCtl.TargetX, "la cámara pasea");
             Assert.IsFalse(G.Ui.HeadShown(0), "vida sobre la cabeza oculta en el título");
-            Tap("Space");
+            Tap("KeyX");
             Assert.AreEqual(GameState.Lobby, G.State);
             Assert.IsFalse(G.Ui.TitleShown);
             Assert.IsTrue(G.Lobby.IsOpen);
@@ -65,7 +65,7 @@ namespace Delvefolk.Tests
             Tap("Enter");
             Assert.IsTrue(L.Joined(1), "J2 se une con ENTER");
             // J1 activa el modo exclusivo y avanza su habilidad: 'blast' está cogida por J2 → salta a 'charge'
-            Tap("KeyX");
+            Tap("KeyV");
             Assert.IsTrue(G.Settings.ExclusiveAbilities, "modo exclusivo activado");
             Tap("KeyD");
             Assert.AreEqual("charge", G.Loadouts[0].Ability, "J1 salta la habilidad ocupada");
@@ -75,11 +75,11 @@ namespace Delvefolk.Tests
             // J2 sale: su hueco se libera y no cuenta
             Tap("ShiftRight");
             Assert.IsFalse(L.Joined(1), "J2 sale de la sala");
-            Tap("KeyX");
+            Tap("KeyV");
             Assert.IsFalse(G.Settings.ExclusiveAbilities, "modo exclusivo desactivado");
             Tap("Enter");
             Assert.AreEqual("shout", G.Loadouts[1].Ability, "al volver recupera su elección guardada");
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsFalse(L.AllReady(), "falta J2");
             Assert.IsFalse(L.StartEnabled);
             Tap("Enter");
@@ -118,7 +118,7 @@ namespace Delvefolk.Tests
             Tap("KeyC"); Assert.IsFalse(G.Settings.SwapAllies);
             Tap("KeyC");
             // Listo y cuenta atrás; cambiar un ajuste quita el "listo"
-            Tap("Space");
+            Tap("KeyX");
             Assert.IsTrue(L.AllReady());
             Step(30);
             Assert.IsNotNull(L.Countdown);
@@ -126,13 +126,13 @@ namespace Delvefolk.Tests
             Tap("KeyB");
             Assert.IsFalse(L.Ready(0)); Assert.IsNull(L.Countdown);
             // Listo otra vez y desmarcar a tiempo cancela la cuenta atrás
-            Tap("Space"); Step(60);
-            Tap("Space");
+            Tap("KeyX"); Step(60);
+            Tap("KeyX");
             Assert.IsNull(L.Countdown);
             Step(200);
             Assert.AreEqual(GameState.Lobby, G.State, "sin todos listos no empieza");
             // Estando listo no se puede cambiar nada
-            Tap("Space");
+            Tap("KeyX");
             string ab = G.Loadouts[0].Ability;
             Tap("KeyD");
             Assert.AreEqual(ab, G.Loadouts[0].Ability);
@@ -217,10 +217,11 @@ namespace Delvefolk.Tests
             StringAssert.Contains("aturdido", G.Ui.PanelStatus(0));
             p.Gear.Gold = 7; G.Ui.SetGold(0, 7);
             Assert.AreEqual("🪙 7", G.Ui.PanelGold(0));
-            // J2 se une: aparece su panel y desaparece el aviso
+            // J2 se une: aparece su panel; el aviso sigue mientras quepan más (hasta 4)
             Tap("Enter");
             Assert.IsTrue(G.Ui.PanelShown(1));
-            Assert.IsFalse(G.Ui.JoinHintShown);
+            Assert.IsTrue(G.Ui.JoinHintShown);
+            Assert.IsFalse(G.Ui.PanelShown(2));
             Assert.AreEqual("GRITO DE GUERRA", G.Ui.PanelAbilityName(1));
             // Derribado
             var p2 = G.Players[1];
@@ -246,7 +247,7 @@ namespace Delvefolk.Tests
             a.Play("coin");
             Assert.AreEqual(n0 + 2, a.PlayedCount);
             // El salto suena
-            Tap("ShiftLeft");
+            Tap("Space");
             Assert.AreEqual("jump", a.LastPlayed);
             // M silencia: no suena nada; otra M lo devuelve
             Tap("KeyM");

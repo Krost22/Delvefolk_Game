@@ -9,41 +9,60 @@ namespace Delvefolk
 
         partial void BeforePlayers(float dt)
         {
-            // Unirse a mitad de partida
-            if (State == GameState.Play && Players.Count == 1 && Input.ConsumeAny(ControlSchemes.All[1].Attack)) JoinPlayer2();
+            // Unirse a mitad de partida: cualquier dispositivo libre (teclado derecho, teclado izquierdo o un mando)
+            if (State == GameState.Play && Players.Count < ControlSchemes.MaxPlayers)
+                foreach (var b in ControlSchemes.AllDevices())
+                {
+                    if (DeviceTaken(b)) continue;
+                    if (Input.ConsumeAny(ControlSchemes.For(b).Join)) { JoinPlayer(b); break; }
+                }
             BonusPreUpdate(dt);
         }
 
         partial void BonusPreUpdate(float dt);
 
-        // El J2 se une a mitad de partida pulsando su botón de ataque
+        // El J2 se une con el teclado derecho (o el primer dispositivo libre)
         public void JoinPlayer2()
         {
-            if (Players.Count != 1 || State != GameState.Play) return;
-            NumPlayers = 2;
+            var b = DeviceBinding.KeyB;
+            if (DeviceTaken(b)) foreach (var d in ControlSchemes.AllDevices()) if (!DeviceTaken(d)) { b = d; break; }
+            JoinPlayer(b);
+        }
+
+        // Un jugador nuevo se une a mitad de partida con el dispositivo con el que ha pulsado
+        public void JoinPlayer(DeviceBinding device)
+        {
+            if (Players.Count < 1 || Players.Count >= ControlSchemes.MaxPlayers || State != GameState.Play) return;
+            int idx = Players.Count;
+            Bindings[idx] = device;
+            NumPlayers = idx + 1;
             var p1 = Players[0];
-            // Habilidades exclusivas: si J2 trae la misma que J1, se le asigna la siguiente libre
-            if (Settings.ExclusiveAbilities && Loadouts[1].Ability == p1.Ability.Id)
+            // Habilidades exclusivas: si trae una que ya tiene otro, se le asigna la siguiente libre
+            if (Settings.ExclusiveAbilities)
             {
-                foreach (var id in Abilities.Order) if (id != p1.Ability.Id) { Loadouts[1].SetAbility(id); break; }
+                var taken = new System.Collections.Generic.List<string>();
+                foreach (var q in Players) taken.Add(q.Ability.Id);
+                if (taken.Contains(Loadouts[idx].Ability))
+                    foreach (var id in Abilities.Order) if (!taken.Contains(id)) { Loadouts[idx].SetAbility(id); break; }
             }
             var pos = FreeSpotNear(p1.X, p1.Z);
-            var p2 = new Player(this, pos.x, pos.y, 1);
+            var p2 = new Player(this, pos.x, pos.y, idx);
             Players.Add(p2);
             if (!InBonus && FloorStart != null)
             {
                 System.Array.Resize(ref FloorStart, FloorStart.Length + 1);
                 FloorStart[FloorStart.Length - 1] = new CarryState { Item = new FistsWeapon().GetState(), Hp = Cfg.PlayerMaxHp, Gear = null };
             }
-            Ui.SetHealth(1, p2.Hp, p2.MaxHp, true);
-            Ui.SetGear(1, p2.Gear);
-            Ui.SetAbility(1, p2.Ability);
+            Ui.SetHealth(idx, p2.Hp, p2.MaxHp, true);
+            Ui.SetGear(idx, p2.Gear);
+            Ui.SetAbility(idx, p2.Ability);
             OnPlayerJoinedBonus(p2);
             ApplyPlayerSetup();
             Audio.Play("join");
             Effects.Ring(p2.X, p2.Z, RingOpts.Of(0x5bb0ff, 2f, 0.5f));
-            Ui.FloatText(p2.X, 2.8f, p2.Z, "¡J2 se une!", TextStyle.Big);
-            Ui.Toast("J2: FLECHAS para moverte, ENTER para atacar, SHIFT derecho para recoger o agarrar a tu compañero.", 5f);
+            Ui.FloatText(p2.X, 2.8f, p2.Z, "¡" + p2.Look.Name + " se une!", TextStyle.Big);
+            var sc = p2.Controls.S;
+            Ui.Toast(p2.Look.Name + " (" + device.Label + "): " + sc.MoveKeys + " para moverte, " + sc.AttackKey + " atacar, " + sc.InteractKey + " recoger, " + sc.JumpKey + " saltar, " + sc.AbilityKey + " habilidad.", 5f);
         }
 
         partial void OnPlayerJoinedBonus(Player p);

@@ -35,9 +35,29 @@ namespace Delvefolk
         public readonly Dictionary<string, bool> SeenHints = new Dictionary<string, bool>();
         public readonly List<Player> Players = new List<Player>();
         public readonly List<StaticProp> Statics = new List<StaticProp>();
-        public readonly PlayerLoadout[] Loadouts = new PlayerLoadout[2];
+        public readonly PlayerLoadout[] Loadouts = new PlayerLoadout[ControlSchemes.MaxPlayers];
         Light moon;
-        public readonly Light[] PlayerLights = new Light[2];
+        public readonly Light[] PlayerLights = new Light[ControlSchemes.MaxPlayers];
+        // Dispositivo de cada hueco de jugador (se elige en la sala o al unirse a mitad de partida)
+        public readonly DeviceBinding[] Bindings = { ControlSchemes.DefaultFor(0), ControlSchemes.DefaultFor(1), ControlSchemes.DefaultFor(2), ControlSchemes.DefaultFor(3) };
+
+        // ¿Algún jugador presente (o de los primeros n huecos) usa este dispositivo?
+        public bool DeviceTaken(DeviceBinding b, int except = -1, int slots = -1)
+        {
+            int n = slots >= 0 ? slots : Players.Count;
+            for (int i = 0; i < n && i < Bindings.Length; i++) if (i != except && Bindings[i].Equals(b)) return true;
+            return false;
+        }
+
+        // Cambia el dispositivo de un jugador (también el de su personaje si ya está en la partida)
+        public void SetBinding(int i, DeviceBinding b)
+        {
+            Bindings[i] = b;
+            if (i < Players.Count) Players[i].Controls.Bind(b);
+            if (i < Players.Count) ApplyPlayerSetup();
+        }
+
+        public ControlScheme SchemeOf(int i) { return i < Players.Count ? Players[i].Controls.S : ControlSchemes.For(Bindings[i]); }
 
         public Player Player1 { get { return Players.Count > 0 ? Players[0] : null; } }
         public PlayerLoadout LoadoutFor(int i) { return Loadouts[i]; }
@@ -77,13 +97,12 @@ namespace Delvefolk
             // Posición web (−10, 20, 5) mirando al origen → en Unity desde (−10, 20, −5)
             moonGo.transform.rotation = Quaternion.LookRotation(new Vector3(10f, -20f, 5f));
             // Una luz por jugador (siempre existen las dos para no recompilar shaders)
-            for (int i = 0; i < 2; i++) PlayerLights[i] = Lighting.Point(SceneRoot, "Lampara" + (i + 1), 0xffd9a0, 11f);
+            for (int i = 0; i < ControlSchemes.MaxPlayers; i++) PlayerLights[i] = Lighting.Point(SceneRoot, "Lampara" + (i + 1), 0xffd9a0, 11f);
             Lighting.SetFog(0x050407, 24f, 46f);
 
             Effects = new Effects(SceneRoot, FxRand);
             Ui = new Hud(this, SceneRoot);
-            Loadouts[0] = PlayerLoadout.Load(0);
-            Loadouts[1] = PlayerLoadout.Load(1);
+            for (int i = 0; i < ControlSchemes.MaxPlayers; i++) Loadouts[i] = PlayerLoadout.Load(i);
             InitSystems();
             // Escena de fondo para la pantalla de título
             LoadFloor(1, null, true);
@@ -223,11 +242,12 @@ namespace Delvefolk
         public void ApplyPlayerSetup()
         {
             bool solo = Players.Count == 1;
-            // En solitario el J1 también se mueve con las flechas
-            if (Players.Count > 0) Players[0].Controls.Alt = solo ? ControlSchemes.All[1] : null;
-            Ui.ShowPlayer(1, !solo);
-            Ui.SetJoinHint(solo && State != GameState.Title);
-            for (int i = 0; i < 2; i++)
+            // En solitario con el teclado izquierdo, el J1 también se mueve con las flechas
+            if (Players.Count > 0) Players[0].Controls.Alt = solo && Bindings[0].Kind == DeviceKind.KeyboardA ? ControlSchemes.KeyboardB : null;
+            for (int i = 1; i < ControlSchemes.MaxPlayers; i++) Ui.ShowPlayer(i, i < Players.Count);
+            for (int i = 0; i < Players.Count; i++) Ui.SetPanelKeys(i, ControlSchemes.Help(Players[i].Controls.S));
+            Ui.SetJoinHint(Players.Count < ControlSchemes.MaxPlayers && State != GameState.Title);
+            for (int i = 0; i < ControlSchemes.MaxPlayers; i++)
             {
                 PlayerLights[i].intensity = i < Players.Count ? (solo ? 1.3f : 1.0f) * Lighting.PointScale : 0f;
                 PlayerLights[i].enabled = i < Players.Count;

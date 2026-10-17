@@ -24,7 +24,7 @@ namespace Delvefolk
             public float LayoutH, ChipT;
         }
 
-        readonly PanelUi[] panels = new PanelUi[2];
+        readonly PanelUi[] panels = new PanelUi[ControlSchemes.MaxPlayers];
         RectTransform panelsLayer, hudGroup;
         Image joinHint; TextMeshProUGUI joinText;
         Image controlsBg;
@@ -39,15 +39,15 @@ namespace Delvefolk
         {
             panelsLayer = MakeLayer("Paneles");
             panelsLayer.SetSiblingIndex(topLayer.GetSiblingIndex());
-            for (int i = 0; i < 2; i++) panels[i] = MakePanel(i);
-            // J2: pulsa ENTER para unirte (arriba a la derecha, borde discontinuo azul)
+            for (int i = 0; i < panels.Length; i++) panels[i] = MakePanel(i);
+            // Unirse: ENTER o A en un mando (abajo, sobre la barra de controles)
             joinHint = MakeImage(panelsLayer, "UnirseJ2", new Color(10 / 255f, 20 / 255f, 35 / 255f, 0.8f));
             var jr = joinHint.rectTransform;
-            jr.anchorMin = jr.anchorMax = jr.pivot = new Vector2(1, 1);
-            jr.anchoredPosition = new Vector2(-16 * Px, -16 * Px);
+            jr.anchorMin = jr.anchorMax = jr.pivot = new Vector2(0.5f, 0);
+            jr.anchoredPosition = new Vector2(0, 52 * Px);
             var jb = MakeImage(jr, "Borde", MathUtil.Hex(0x5bb0ff));
             Stretch(jb.rectTransform); AsFrame(jb, 2 * Px);
-            joinText = MakeText(jr, "Texto", "<b>J2:</b> pulsa " + Key("ENTER") + " para unirte", 14, Fonts.Body, MathUtil.Hex(0xcfe3ff));
+            joinText = MakeText(jr, "Texto", "<b>¿Alguien más?</b> pulsa " + Key("ENTER") + " o " + Key("A") + " en un mando para unirte", 14, Fonts.Body, MathUtil.Hex(0xcfe3ff));
             joinText.richText = true;
             Stretch(joinText.rectTransform, 10);
             var pref = joinText.GetPreferredValues(joinText.text);
@@ -60,9 +60,9 @@ namespace Delvefolk
             cr.anchoredPosition = new Vector2(-16 * Px, 14 * Px);
             const string b0 = "<color=#f3e6c8><b>", b1 = "</b></color>";
             var ct = MakeText(cr, "Texto",
-                b0 + "E" + b1 + " / " + b0 + "SHIFT der." + b1 + ": recoger · agarrar compañero · descender — " + b0 + "Q" + b1 + " / " + b0 + "CTRL der." + b1 +
-                ": habilidad — " + b0 + "SHIFT izq." + b1 + " / " + b0 + "Num3" + b1 + ": saltar (¡encima de los enemigos!) — con alguien en brazos, " + b0 + "atacar" + b1 +
-                " lo lanza · " + b0 + "M" + b1 + " sonido · " + b0 + "Esc" + b1 + " pausa", 12, Fonts.Body, MathUtil.Hex(0xa8957a));
+                b0 + "X" + b1 + " / " + b0 + "ENTER" + b1 + " / " + b0 + "A" + b1 + ": atacar · lanzar — " + b0 + "E" + b1 + " / " + b0 + "SHIFT der." + b1 + " / " + b0 + "X" + b1 + "🎮: recoger · agarrar · descender — " +
+                b0 + "Z" + b1 + " / " + b0 + "CTRL der." + b1 + " / " + b0 + "Y" + b1 + ": habilidad — " + b0 + "ESPACIO" + b1 + " / " + b0 + "Num3" + b1 + " / " + b0 + "B" + b1 + ": saltar · " +
+                b0 + "M" + b1 + " sonido · " + b0 + "Esc" + b1 + " pausa", 12, Fonts.Body, MathUtil.Hex(0xa8957a));
             ct.richText = true;
             Stretch(ct.rectTransform, 8);
             var cp = ct.GetPreferredValues(ct.text);
@@ -90,9 +90,11 @@ namespace Delvefolk
             u.Border = MakeImage(panelsLayer, "Panel" + (i + 1), ring);
             AsFrame(u.Border, 2 * Px);
             u.Root = u.Border.rectTransform;
-            var anchor = i == 0 ? new Vector2(0, 1) : new Vector2(1, 1);
+            // J1 arriba a la izquierda, J2 arriba a la derecha, J3 abajo a la izquierda, J4 abajo a la derecha (sobre los controles)
+            bool right = i % 2 == 1, bottom = i >= 2;
+            var anchor = new Vector2(right ? 1 : 0, bottom ? 0 : 1);
             u.Root.anchorMin = u.Root.anchorMax = u.Root.pivot = anchor;
-            u.Root.anchoredPosition = new Vector2((i == 0 ? 16 : -16) * Px, -16 * Px);
+            u.Root.anchoredPosition = new Vector2((right ? -16 : 16) * Px, bottom ? (right ? 52 : 16) * Px : -16 * Px);
             u.Bg = MakeImage(u.Root, "Fondo", new Color(24 / 255f, 17 / 255f, 13 / 255f, 0.9f));
             Stretch(u.Bg.rectTransform, 2 * Px);
             var c = u.Bg.rectTransform;
@@ -103,7 +105,7 @@ namespace Delvefolk
             u.Name.fontStyle = FontStyles.Bold; u.Name.characterSpacing = 8f;
             Outline(u.Name, Color.black, 0.2f);
             u.Name.alignment = TextAlignmentOptions.Left;
-            u.Keys = MakeText(c, "Teclas", i == 1 ? "FLECHAS · ENTER · SHIFT der. · Num3 saltar" : "WASD · ESPACIO · E · SHIFT izq. saltar", 10, Fonts.Body, KeyGrey);
+            u.Keys = MakeText(c, "Teclas", ControlSchemes.Help(ControlSchemes.For(ControlSchemes.DefaultFor(i))), 10, Fonts.Body, KeyGrey);
             u.Keys.alignment = TextAlignmentOptions.Right;
 
             // VIDA
@@ -300,7 +302,7 @@ namespace Delvefolk
             u.AbRing.color = u.AbColor;
             u.AbGlyph.text = d.Icon;
             u.AbName.text = d.Name.ToUpperInvariant();
-            u.AbKey.text = KeySmall(ControlSchemes.All[i].AbilityKey) + " · " + d.Cooldown + " s";
+            u.AbKey.text = KeySmall(g.SchemeOf(i).AbilityKey) + " · " + d.Cooldown + " s";
             u.AbDeg = -1;
         }
 
@@ -366,6 +368,10 @@ namespace Delvefolk
 
         partial void OnJoinHint(bool on) { if (joinHint) joinHint.gameObject.SetActive(on); }
 
+        // Teclas del panel de un jugador (cambian si elige otro dispositivo)
+        public void SetPanelKeys(int i, string text) { var u = panels[i]; if (u != null && u.Keys && u.Keys.text != text) u.Keys.text = text; }
+        public string PanelKeys(int i) { return panels[i].Keys.text; }
+
         public bool PanelShown(int i) { return panels[i] != null && panels[i].Shown; }
         public string PanelHpText(int i) { return panels[i].HpText; }
         public string PanelWeaponName(int i) { return panels[i].WNameText; }
@@ -392,7 +398,7 @@ namespace Delvefolk
             pulseT += dt;
             float pulse = 0.5f + 0.5f * Mathf.Sin(pulseT * Mathf.PI / 0.6f);
             var players = g.Players;
-            for (int i = 0; i < 2; i++)
+            for (int i = 0; i < panels.Length; i++)
             {
                 var u = panels[i];
                 if (u == null || !u.Shown) continue;

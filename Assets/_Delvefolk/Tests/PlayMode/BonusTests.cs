@@ -53,7 +53,7 @@ namespace Delvefolk.Tests
             Assert.IsTrue(G.Ui.BonusScreenShown, "introducción visible");
             Assert.AreEqual("PISO BONUS", G.Ui.BonusTagText);
             Assert.AreEqual("BONUS", G.Ui.FloorShown);
-            Tap("Space");
+            Tap("KeyX");
             Assert.AreEqual("intro", G.Bonus.Phase, "falta la confirmación de J2");
             StringAssert.Contains("✔ listo", G.Ui.BonusReadyText);
             Step(Mathf.CeilToInt(BonusConfig.IntroTimeout * 60f) + 5);   // J2 no confirma: arranca solo
@@ -451,7 +451,7 @@ namespace Delvefolk.Tests
             // Examinar: la pista queda a la vista de todos
             var it2 = ch.Items.First(x => x.Kind == "normal" && x.State == "closed");
             PutU(p1, it2.X - 1.2f, it2.Z); Face(p1, it2.X, it2.Z);
-            HoldAll(Mathf.CeilToInt(ch.ExamineSeconds * 60f) + 4, "Space");
+            HoldAll(Mathf.CeilToInt(ch.ExamineSeconds * 60f) + 4, "KeyX");
             Assert.IsTrue(it2.Examined);
             Assert.IsNotNull(it2.Label, "la pista se muestra a todos");
             Assert.IsTrue(G.Ui.HasLabel(it2.Hint));

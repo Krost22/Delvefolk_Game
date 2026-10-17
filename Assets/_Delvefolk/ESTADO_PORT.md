@@ -69,6 +69,20 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
   morado dos botines raros, negro unas monedas.
 - Pruebas `TntTests` (7). Totales: EditMode 52/52, PlayMode 137/137.
 
+## Controles y hasta 4 jugadores (2026-10-17)
+- **J1 en teclado**: WASD mover · ESPACIO saltar · X atacar · Z habilidad · E recoger. J2 (teclado derecho) sin cambios.
+- **Dispositivos** (`Core/PlayerControls.cs`): `DeviceBinding` = teclado izquierdo, teclado derecho o mando (hueco 0..3).
+  Solo 2 jugadores en el teclado; J3 y J4 con mando. `Game.Bindings[i]` guarda el de cada jugador.
+- **Input System** (`Core/InputHub.cs`): hasta 4 mandos de cualquier tipo (Xbox, PlayStation, Switch Pro, genéricos y
+  joysticks HID); cada uno ocupa un hueco fijo (GP0..GP3) desde que se conecta. Mando: A atacar · X recoger · B saltar ·
+  Y/RB habilidad · START unirse. Si se desconecta el mando de un jugador, pausa.
+- **Elegir dispositivo**: en el título, ESPACIO/X → J1 con teclado; A en un mando → J1 con ese mando; ENTER → dos en
+  teclado. En la sala (4 columnas), un dispositivo libre se une con su botón; cada uno cambia de control con su tecla de
+  habilidad (Z / CTRL der. / Y) o el botón "Cambiar control"; INTERACTUAR sale. Ajuste de habilidades exclusivas: tecla V.
+  A mitad de partida se une cualquier dispositivo libre (ENTER, A o START), hasta 4.
+- HUD: paneles J1 arriba izq., J2 arriba dcha., J3 abajo izq., J4 abajo dcha.; los avisos usan las teclas de cada uno.
+- En pantallas y minijuegos, confirmar = atacar o saltar. Pruebas `PlayersTests` (5). Totales: EditMode 52/52, PlayMode 142/142.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el

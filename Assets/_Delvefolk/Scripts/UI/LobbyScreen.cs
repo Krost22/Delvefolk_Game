@@ -5,14 +5,18 @@ using UnityEngine.UI;
 
 namespace Delvefolk
 {
-    // Sala de preparación (LobbyScreen.js): cada jugador elige UNA habilidad especial y su aspecto, y marca "listo".
-    // Controles de cada jugador (sus teclas o su mando): arriba/abajo fila · izquierda/derecha cambiar ·
-    // ATACAR listo / no listo · INTERACTUAR (J2) salir de la sala. J2 se une con su ATACAR. Esc vuelve al título.
-    // Ajustes del anfitrión (J1): pisos bonus (B), habilidades exclusivas (X), intercambio con aliados (C).
+    // Sala de preparación (LobbyScreen.js): hasta 4 jugadores eligen UNA habilidad especial y su aspecto, y marcan "listo".
+    // Unirse: cualquier dispositivo libre pulsa su botón (teclado izquierdo X/ESPACIO, teclado derecho ENTER, mando A o START).
+    // En el teclado caben dos jugadores; el resto, con mando. Cada jugador, con SUS controles:
+    //   arriba/abajo fila · izquierda/derecha cambiar · ATACAR (o SALTAR) listo · HABILIDAD cambiar de dispositivo ·
+    //   INTERACTUAR salir (todos menos el anfitrión). Esc vuelve al título.
+    // Ajustes del anfitrión (J1): pisos bonus (B), habilidades exclusivas (V), intercambio con aliados (C).
     // La partida empieza sola cuando todos los presentes están listos (cuenta atrás de 3 s, cancelable).
     public sealed class LobbyScreen
     {
         const float Px = Hud.Px;
+        const int N = ControlSchemes.MaxPlayers;
+        const float SlotW = 330f, SlotH = 440f, Gap = 12f, RowH = 20f;
         static readonly string[] RowIds = { "ability", "head", "body", "acc", "palette", "material", "fx", "ready" };
         static readonly string[] RowNames = { "Habilidad", "Cabeza", "Cuerpo", "Accesorio", "Colores", "Material", "Efecto", "Listo" };
 
@@ -23,18 +27,19 @@ namespace Delvefolk
 
         sealed class Slot
         {
-            public int I; public bool Joined, Ready, Pad; public int Row; public string Note = ""; public float NoteT;
-            public Image Border, Bg; public TextMeshProUGUI Name, Conn;
+            public int I; public bool Joined, Ready, PadOk = true; public int Row; public string Note = ""; public float NoteT;
+            public Image Border, Bg; public TextMeshProUGUI Name, Conn, JoinText, Keys;
             public RectTransform JoinBox, Body;
             public RawImage PreviewImg; public CharacterPreview Preview;
             public RowUi[] Rows; public Button ReadyBtn; public TextMeshProUGUI ReadyText; public Image ReadyFace;
-            public TextMeshProUGUI CardIcon, CardName, CardShort, Pros, Cons, Allies, NoteText;
+            public TextMeshProUGUI CardIcon, CardName, CardShort, Pros, Cons, NoteText;
+            public Button LeaveBtn;
         }
 
         readonly Game g;
         readonly Hud ui;
         readonly RectTransform root;
-        readonly Slot[] slots = new Slot[2];
+        readonly Slot[] slots = new Slot[N];
         readonly TextMeshProUGUI status;
         readonly Button startBtn;
         readonly Dictionary<string, TextMeshProUGUI> settingTexts = new Dictionary<string, TextMeshProUGUI>();
@@ -49,111 +54,112 @@ namespace Delvefolk
             ui = game.Ui;
             root = ui.Overlay("Sala", 0.88f);
             var box = Hud.NewRect(root, "Sala");
-            float W = 1040 * Px;
+            float W = (SlotW * N + Gap * (N - 1)) * Px;
             box.anchorMin = box.anchorMax = new Vector2(0.5f, 1f);
             box.pivot = new Vector2(0.5f, 1f);
-            box.anchoredPosition = new Vector2(0, -14 * Px);
-            box.sizeDelta = new Vector2(W, 660 * Px);
+            box.anchoredPosition = new Vector2(0, -2 * Px);
+            box.sizeDelta = new Vector2(W, (56 + SlotH + 130) * Px);
             var h2 = ui.Title(box, "Sala de preparación", 28, 0);
             h2.alignment = TextAlignmentOptions.Center;
-            float slotW = (1040f - 14f) / 2f * Px;
-            for (int i = 0; i < 2; i++) slots[i] = BuildSlot(box, i, i * (slotW + 14 * Px), 72 * Px, slotW);
+            for (int i = 0; i < N; i++) slots[i] = BuildSlot(box, i, i * (SlotW + Gap) * Px, 48 * Px, SlotW * Px);
 
             // Pie: ajustes del anfitrión, estado y botones
-            float fy = 72 * Px + 446 * Px;
+            float fy = (48 + SlotH + 8) * Px;
+            float sx = W / 2f - 340 * Px;
             var host = Hud.MakeText(box, "Anfitrion", "Anfitrión (J1):", 13, Fonts.Body, MathUtil.Hex(0xb39a72));
-            Hud.PlaceIn(host.rectTransform, 140 * Px, fy + 6 * Px, 110 * Px, 20 * Px);
+            Hud.PlaceIn(host.rectTransform, sx - 120 * Px, fy + 6 * Px, 110 * Px, 20 * Px);
             host.alignment = TextAlignmentOptions.Right;
-            SettingButton(box, "bonusMode", "Pisos bonus", "B", 260 * Px, fy, 196 * Px);
-            SettingButton(box, "exclusiveAbilities", "Habilidades exclusivas", "X", 462 * Px, fy, 226 * Px);
-            SettingButton(box, "swapAllies", "Intercambio con aliados", "C", 694 * Px, fy, 230 * Px);
+            SettingButton(box, "bonusMode", "Pisos bonus", "B", sx, fy, 196 * Px);
+            SettingButton(box, "exclusiveAbilities", "Habilidades exclusivas", "V", sx + 202 * Px, fy, 226 * Px);
+            SettingButton(box, "swapAllies", "Intercambio con aliados", "C", sx + 434 * Px, fy, 230 * Px);
             status = Hud.MakeText(box, "Estado", "", 15, Fonts.Body, MathUtil.Hex(0xffe2a0));
             status.fontStyle = FontStyles.Bold;
-            Hud.PlaceIn(status.rectTransform, 0, fy + 40 * Px, W, 22 * Px);
-            ui.MakeButton(box, "Volver <size=70%>(Esc)</size>", fy + 70 * Px, () => g.BackToTitle(), -120 * Px);
-            startBtn = ui.MakeButton(box, "¡A la mazmorra!", fy + 70 * Px, () => { if (AllReady()) Begin(); }, 120 * Px);
+            Hud.PlaceIn(status.rectTransform, 0, fy + 36 * Px, W, 22 * Px);
+            ui.MakeButton(box, "Volver <size=70%>(Esc)</size>", fy + 62 * Px, () => g.BackToTitle(), -120 * Px);
+            startBtn = ui.MakeButton(box, "¡A la mazmorra!", fy + 62 * Px, () => { if (AllReady()) Begin(); }, 120 * Px);
             root.gameObject.SetActive(false);
         }
 
-        // ---------- Construcción de un hueco ----------
+        // ---------- Construcción de un hueco (columna) ----------
         Slot BuildSlot(RectTransform parent, int i, float x, float y, float w)
         {
             var s = new Slot { I = i };
             var look = Player.Looks[i];
-            var scheme = ControlSchemes.All[i];
             var pc = MathUtil.Hex(look.Ring);
             s.Border = Hud.MakeImage(parent, "Hueco" + (i + 1), pc);
             var r = s.Border.rectTransform;
-            Hud.PlaceIn(r, x, y, w, 440 * Px);
+            Hud.PlaceIn(r, x, y, w, SlotH * Px);
             s.Bg = Hud.MakeImage(r, "Fondo", new Color(27 / 255f, 19 / 255f, 13 / 255f, 1f));
             Hud.Stretch(s.Bg.rectTransform, 3 * Px);
             var c = s.Bg.rectTransform;
-            float iw = w - 6 * Px - 20 * Px;
+            float iw = w - 6 * Px - 16 * Px;
             s.Name = Hud.MakeText(c, "Nombre", look.Name, 22, Fonts.Body, pc);
             s.Name.fontStyle = FontStyles.Bold; s.Name.characterSpacing = 8f; s.Name.alignment = TextAlignmentOptions.Left;
             Hud.Outline(s.Name, Color.black, 0.2f);
-            Hud.PlaceIn(s.Name.rectTransform, 10 * Px, 6 * Px, iw * 0.5f, 30 * Px);
+            Hud.PlaceIn(s.Name.rectTransform, 8 * Px, 4 * Px, 60 * Px, 30 * Px);
             s.Conn = Hud.MakeText(c, "Dispositivo", "", 12, Fonts.Body, MathUtil.Hex(0xc9b48d));
             s.Conn.alignment = TextAlignmentOptions.Right;
-            Hud.PlaceIn(s.Conn.rectTransform, 10 * Px + iw * 0.5f, 12 * Px, iw * 0.5f, 20 * Px);
+            s.Conn.richText = true;
+            Hud.PlaceIn(s.Conn.rectTransform, 64 * Px, 10 * Px, iw - 56 * Px, 20 * Px);
 
-            // Sin unir: "Pulsa ENTER para unirte" + botón
+            // Sin unir: cómo unirse + botón
             s.JoinBox = Hud.NewRect(c, "Unirse");
-            Hud.PlaceIn(s.JoinBox, 0, 40 * Px, w - 6 * Px, 380 * Px);
-            var jt = Hud.MakeText(s.JoinBox, "Texto", "Pulsa " + Hud.Key(scheme.AttackKey) + " para unirte", 16, Fonts.Body, Hud.Ink);
-            jt.richText = true;
-            Hud.PlaceIn(jt.rectTransform, 0, 110 * Px, w - 6 * Px, 30 * Px);
-            ui.MakeButton(s.JoinBox, "Unirse", 150 * Px, () => Join(i));
+            Hud.PlaceIn(s.JoinBox, 0, 40 * Px, w - 6 * Px, 400 * Px);
+            s.JoinText = Hud.MakeText(s.JoinBox, "Texto", "", 15, Fonts.Body, Hud.Ink);
+            s.JoinText.richText = true; s.JoinText.textWrappingMode = TextWrappingModes.Normal;
+            Hud.PlaceIn(s.JoinText.rectTransform, 12 * Px, 120 * Px, w - 30 * Px, 60 * Px);
+            ui.MakeButton(s.JoinBox, "Unirse", 190 * Px, () => JoinByClick());
 
-            // Unido: vista previa, filas, ficha de la habilidad, nota, teclas y salir
+            // Unido: vista previa, filas, ficha de la habilidad, nota, teclas y botones
             s.Body = Hud.NewRect(c, "Cuerpo");
-            Hud.PlaceIn(s.Body, 0, 40 * Px, w - 6 * Px, 400 * Px);
+            Hud.PlaceIn(s.Body, 0, 36 * Px, w - 6 * Px, (SlotH - 42) * Px);
             var pvBg = Hud.MakeImage(s.Body, "FondoVista", MathUtil.Hex(0x24190f));
-            Hud.PlaceIn(pvBg.rectTransform, 10 * Px, 0, 150 * Px, 180 * Px);
+            Hud.PlaceIn(pvBg.rectTransform, (w - 6 * Px) / 2f - 52 * Px, 0, 104 * Px, 92 * Px);
             s.PreviewImg = new GameObject("Vista", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
             s.PreviewImg.transform.SetParent(pvBg.transform, false);
             Hud.Stretch(s.PreviewImg.rectTransform);
             s.PreviewImg.raycastTarget = false;
-            float rx = 170 * Px, rw = iw - 160 * Px;
             s.Rows = new RowUi[RowIds.Length];
-            for (int k = 0; k < RowIds.Length; k++) s.Rows[k] = BuildRow(s, k, rx, k * 23 * Px, rw);
+            for (int k = 0; k < RowIds.Length; k++) s.Rows[k] = BuildRow(s, k, 8 * Px, 96 * Px + k * RowH * Px, iw);
             // Ficha de la habilidad
+            float cy = 96 * Px + RowIds.Length * RowH * Px + 4 * Px;
             var card = Hud.MakeImage(s.Body, "Ficha", new Color(0, 0, 0, 0.35f));
-            Hud.PlaceIn(card.rectTransform, 10 * Px, 190 * Px, iw, 146 * Px);
+            Hud.PlaceIn(card.rectTransform, 8 * Px, cy, iw, 84 * Px);
             var cr = card.rectTransform;
-            float cw = iw - 18 * Px;
-            s.CardIcon = Hud.MakeText(cr, "Icono", "", 28, Fonts.Body, Color.white);
-            Hud.PlaceIn(s.CardIcon.rectTransform, 9 * Px, 4 * Px, 40 * Px, 36 * Px);
+            float cw = iw - 14 * Px;
+            s.CardIcon = Hud.MakeText(cr, "Icono", "", 24, Fonts.Body, Color.white);
+            Hud.PlaceIn(s.CardIcon.rectTransform, 6 * Px, 2 * Px, 34 * Px, 32 * Px);
             s.CardName = Hud.MakeText(cr, "Nombre", "", 12, Fonts.Body, Hud.Ink);
             s.CardName.richText = true; s.CardName.alignment = TextAlignmentOptions.Left;
-            Hud.PlaceIn(s.CardName.rectTransform, 52 * Px, 5 * Px, cw - 44 * Px, 34 * Px);
-            s.CardShort = Hud.MakeText(cr, "Resumen", "", 12, Fonts.Body, Hud.Ink);
+            Hud.PlaceIn(s.CardName.rectTransform, 42 * Px, 2 * Px, cw - 36 * Px, 32 * Px);
+            s.CardShort = Hud.MakeText(cr, "Resumen", "", 11, Fonts.Body, Hud.Ink);
             s.CardShort.textWrappingMode = TextWrappingModes.Normal; s.CardShort.alignment = TextAlignmentOptions.TopLeft;
-            Hud.PlaceIn(s.CardShort.rectTransform, 9 * Px, 40 * Px, cw, 32 * Px);
-            s.Pros = Hud.MakeText(cr, "Ventajas", "", 12, Fonts.Body, Hud.Ink);
-            s.Cons = Hud.MakeText(cr, "Desventajas", "", 12, Fonts.Body, Hud.Ink);
+            Hud.PlaceIn(s.CardShort.rectTransform, 7 * Px, 32 * Px, cw, 26 * Px);
+            s.Pros = Hud.MakeText(cr, "Ventajas", "", 11, Fonts.Body, Hud.Ink);
+            s.Cons = Hud.MakeText(cr, "Desventajas", "", 11, Fonts.Body, Hud.Ink);
             foreach (var t in new[] { s.Pros, s.Cons })
             {
-                t.richText = true; t.textWrappingMode = TextWrappingModes.Normal; t.alignment = TextAlignmentOptions.TopLeft;
+                t.richText = true; t.textWrappingMode = TextWrappingModes.NoWrap; t.overflowMode = TextOverflowModes.Ellipsis; t.alignment = TextAlignmentOptions.TopLeft;
             }
-            Hud.PlaceIn(s.Pros.rectTransform, 9 * Px, 72 * Px, cw / 2f - 6 * Px, 50 * Px);
-            Hud.PlaceIn(s.Cons.rectTransform, 9 * Px + cw / 2f + 6 * Px, 72 * Px, cw / 2f - 6 * Px, 50 * Px);
-            s.Allies = Hud.MakeText(cr, "Companeros", "", 12, Fonts.Body, MathUtil.Hex(0xc9b48d));
-            s.Allies.textWrappingMode = TextWrappingModes.Normal; s.Allies.alignment = TextAlignmentOptions.TopLeft;
-            Hud.PlaceIn(s.Allies.rectTransform, 9 * Px, 120 * Px, cw, 18 * Px);
-            s.NoteText = Hud.MakeText(s.Body, "Nota", "", 12, Fonts.Body, MathUtil.Hex(0xff9a2a));
-            s.NoteText.alignment = TextAlignmentOptions.Left;
-            Hud.PlaceIn(s.NoteText.rectTransform, 10 * Px, 338 * Px, iw, 16 * Px);
-            var keys = Hud.MakeText(s.Body, "Teclas", i == 1 ? "FLECHAS elegir · ENTER listo · SHIFT salir" : "WASD elegir · ESPACIO listo", 11, Fonts.Body, MathUtil.Hex(0x8a7a62));
-            keys.alignment = TextAlignmentOptions.Left;
-            Hud.PlaceIn(keys.rectTransform, 10 * Px, 352 * Px, iw, 16 * Px);
-            if (i == 1)
+            Hud.PlaceIn(s.Pros.rectTransform, 7 * Px, 57 * Px, cw, 13 * Px);
+            Hud.PlaceIn(s.Cons.rectTransform, 7 * Px, 70 * Px, cw, 13 * Px);
+            float ny = cy + 86 * Px;
+            s.NoteText = Hud.MakeText(s.Body, "Nota", "", 11, Fonts.Body, MathUtil.Hex(0xff9a2a));
+            s.NoteText.alignment = TextAlignmentOptions.Left; s.NoteText.overflowMode = TextOverflowModes.Ellipsis;
+            Hud.PlaceIn(s.NoteText.rectTransform, 8 * Px, ny, iw, 15 * Px);
+            s.Keys = Hud.MakeText(s.Body, "Teclas", "", 10, Fonts.Body, MathUtil.Hex(0x8a7a62));
+            s.Keys.alignment = TextAlignmentOptions.Left; s.Keys.overflowMode = TextOverflowModes.Ellipsis;
+            Hud.PlaceIn(s.Keys.rectTransform, 8 * Px, ny + 14 * Px, iw, 14 * Px);
+            var swap = SmallButton(s.Body, "🔁 Cambiar control", 8 * Px, ny + 29 * Px, 150 * Px, 22 * Px, () => CycleDevice(i), 12);
+            swap.GetComponent<Image>().color = MathUtil.Hex(0x4a3a24);
+            Hud.ButtonText(swap).color = Hud.Ink;
+            if (i > 0)
             {
-                var leave = SmallButton(s.Body, "Salir de la sala", 10 * Px, 370 * Px, 130 * Px, 24 * Px, () => Leave(1), 12);
-                leave.GetComponent<Image>().color = MathUtil.Hex(0x6a4a2a);
-                Hud.ButtonText(leave).color = Hud.Ink;
+                s.LeaveBtn = SmallButton(s.Body, "Salir", iw - 80 * Px, ny + 29 * Px, 88 * Px, 22 * Px, () => Leave(i), 12);
+                s.LeaveBtn.GetComponent<Image>().color = MathUtil.Hex(0x6a4a2a);
+                Hud.ButtonText(s.LeaveBtn).color = Hud.Ink;
             }
-            s.Preview = new CharacterPreview(g, i, Mathf.RoundToInt(150 * Px * 2), Mathf.RoundToInt(180 * Px * 2));
+            s.Preview = new CharacterPreview(g, i, Mathf.RoundToInt(104 * Px * 2), Mathf.RoundToInt(92 * Px * 2));
             s.PreviewImg.texture = s.Preview.Texture;
             return s;
         }
@@ -163,24 +169,24 @@ namespace Delvefolk
             var row = new RowUi();
             row.Sel = Hud.MakeImage(s.Body, "Fila" + k, new Color(1, 1, 1, 0f));
             row.R = row.Sel.rectTransform;
-            Hud.PlaceIn(row.R, x, y, w, 22 * Px);
+            Hud.PlaceIn(row.R, x, y, w, (RowH - 1) * Px);
             int i = s.I;
             if (RowIds[k] == "ready")
             {
-                s.ReadyBtn = SmallButton(row.R, "Marcar como listo", 2 * Px, 0, w - 4 * Px, 22 * Px, () => { s.Row = k; ToggleReady(i); }, 12);
+                s.ReadyBtn = SmallButton(row.R, "Marcar como listo", 2 * Px, 0, w - 4 * Px, (RowH - 1) * Px, () => { s.Row = k; ToggleReady(i); }, 12);
                 s.ReadyText = Hud.ButtonText(s.ReadyBtn);
                 s.ReadyFace = s.ReadyBtn.GetComponent<Image>();
                 return row;
             }
-            var name = Hud.MakeText(row.R, "Nombre", RowNames[k].ToUpperInvariant(), 11, Fonts.Body, MathUtil.Hex(0xb39a72));
-            name.fontStyle = FontStyles.Bold; name.alignment = TextAlignmentOptions.Left; name.characterSpacing = 4f;
-            Hud.PlaceIn(name.rectTransform, 4 * Px, 0, 74 * Px, 22 * Px);
-            SmallButton(row.R, "◀", 80 * Px, 1 * Px, 24 * Px, 20 * Px, () => { s.Row = k; Change(i, -1); }, 12);
-            SmallButton(row.R, "▶", w - 26 * Px, 1 * Px, 24 * Px, 20 * Px, () => { s.Row = k; Change(i, 1); }, 12);
-            row.Value = Hud.MakeText(row.R, "Valor", "", k == 0 ? 14 : 13, Fonts.Body, MathUtil.Hex(k == 0 ? 0xffcf6a : 0xffe2a0));
+            var name = Hud.MakeText(row.R, "Nombre", RowNames[k].ToUpperInvariant(), 10, Fonts.Body, MathUtil.Hex(0xb39a72));
+            name.fontStyle = FontStyles.Bold; name.alignment = TextAlignmentOptions.Left; name.characterSpacing = 3f;
+            Hud.PlaceIn(name.rectTransform, 2 * Px, 0, 66 * Px, (RowH - 1) * Px);
+            SmallButton(row.R, "◀", 68 * Px, 1 * Px, 22 * Px, 19 * Px, () => { s.Row = k; Change(i, -1); }, 11);
+            SmallButton(row.R, "▶", w - 24 * Px, 1 * Px, 22 * Px, 19 * Px, () => { s.Row = k; Change(i, 1); }, 11);
+            row.Value = Hud.MakeText(row.R, "Valor", "", k == 0 ? 13 : 12, Fonts.Body, MathUtil.Hex(k == 0 ? 0xffcf6a : 0xffe2a0));
             row.Value.fontStyle = FontStyles.Bold;
             row.Value.overflowMode = TextOverflowModes.Ellipsis;
-            Hud.PlaceIn(row.Value.rectTransform, 108 * Px, 0, w - 138 * Px, 22 * Px);
+            Hud.PlaceIn(row.Value.rectTransform, 94 * Px, 0, w - 122 * Px, (RowH - 1) * Px);
             return row;
         }
 
@@ -209,6 +215,7 @@ namespace Delvefolk
         }
 
         // ---------- Apertura ----------
+        // Los dispositivos de los que entran ya están en g.Bindings (el título pone el del J1 y, con 2, el del J2)
         public void Open(int numPlayers)
         {
             IsOpen = true;
@@ -217,7 +224,7 @@ namespace Delvefolk
             foreach (var s in slots) { s.Joined = false; s.Ready = false; s.Row = 0; s.Note = ""; s.NoteT = 0f; s.NoteText.text = ""; }
             Join(0, true);
             if (numPlayers > 1) Join(1, true);
-            Render(1);
+            for (int i = 0; i < N; i++) Render(i);
             Countdown = null;
             RenderSettings();
             RenderStatus();
@@ -244,8 +251,10 @@ namespace Delvefolk
         public int Row(int i) { return slots[i].Row; }
         public string NoteOf(int i) { return slots[i].Note; }
         public CharacterPreview PreviewOf(int i) { return slots[i].Preview; }
+        public DeviceBinding DeviceOf(int i) { return g.Bindings[i]; }
         public string StatusText { get { return statusShown; } }
         public bool StartEnabled { get { return startBtn.interactable; } }
+        public int JoinedCount { get { return JoinedSlots().Count; } }
 
         List<Slot> JoinedSlots()
         {
@@ -262,6 +271,16 @@ namespace Delvefolk
             return true;
         }
 
+        // ¿Lo usa ya algún jugador de la sala (salvo except)?
+        bool DeviceInUse(DeviceBinding b, int except = -1)
+        {
+            foreach (var s in slots) if (s.Joined && s.I != except && g.Bindings[s.I].Equals(b)) return true;
+            return false;
+        }
+
+        // Un mando solo está disponible si está conectado (los teclados, siempre)
+        bool Available(DeviceBinding b) { return b.IsKeyboard || g.Input.Pads[b.Pad].Connected; }
+
         public void Join(int i, bool quiet = false)
         {
             var s = slots[i];
@@ -271,8 +290,32 @@ namespace Delvefolk
             g.Loadouts[i] = PlayerLoadout.Load(i);
             EnforceExclusive(i);
             s.Preview.SetActive(true);
-            if (!quiet) { g.Audio.Play("join"); Note(i, "¡" + Player.Looks[i].Name + " se une!"); }
+            if (!quiet) { g.Audio.Play("join"); Note(i, "¡" + Player.Looks[i].Name + " se une! (" + g.Bindings[i].Label + ")"); }
             Render(i);
+        }
+
+        // Se une un jugador nuevo con este dispositivo, en el primer hueco libre
+        public int JoinWith(DeviceBinding b)
+        {
+            if (DeviceInUse(b)) return -1;
+            for (int i = 0; i < N; i++)
+            {
+                if (slots[i].Joined) continue;
+                g.Bindings[i] = b;
+                Join(i);
+                Countdown = null;
+                RenderAll();
+                return i;
+            }
+            return -1;
+        }
+
+        // Botón "Unirse" con el ratón: el primer dispositivo libre (teclados primero, luego mandos conectados)
+        void JoinByClick()
+        {
+            foreach (var b in ControlSchemes.AllDevices())
+                if (!DeviceInUse(b) && Available(b)) { JoinWith(b); return; }
+            g.Audio.Play("denied");
         }
 
         // Salir de la sala: el hueco queda libre y su selección deja de contar (no bloquea habilidades exclusivas)
@@ -285,8 +328,29 @@ namespace Delvefolk
             s.Preview.SetActive(false);
             Countdown = null;
             g.Audio.Play("drop");
-            Render(i);
-            Render(0);
+            RenderAll();
+        }
+
+        // Cambiar de dispositivo: el siguiente libre (teclado izquierdo → teclado derecho → mandos conectados)
+        public void CycleDevice(int i)
+        {
+            var s = slots[i];
+            if (!s.Joined) return;
+            var all = ControlSchemes.AllDevices();
+            int cur = System.Array.IndexOf(all, g.Bindings[i]);
+            for (int k = 1; k < all.Length; k++)
+            {
+                var b = all[(cur + k + all.Length) % all.Length];
+                if (DeviceInUse(b, i) || !Available(b)) continue;
+                g.Bindings[i] = b;
+                s.Ready = false;
+                g.Audio.Play("swap");
+                Note(i, "Ahora juegas con: " + b.Label);
+                Render(i);
+                return;
+            }
+            Note(i, "No hay otro control libre: conecta un mando");
+            g.Audio.Play("denied");
         }
 
         List<string> TakenAbilities(int except)
@@ -316,7 +380,7 @@ namespace Delvefolk
         {
             var s = slots[i];
             if (!s.Joined) return;
-            if (s.Ready) { Note(i, "Estás listo: pulsa " + ControlSchemes.All[i].AttackKey + " para cambiar algo"); return; }
+            if (s.Ready) { Note(i, "Estás listo: pulsa " + ControlSchemes.For(g.Bindings[i]).AttackKey + " para cambiar algo"); return; }
             string row = RowIds[s.Row];
             var lo = Loadout(i);
             if (row == "ready") return;
@@ -360,7 +424,7 @@ namespace Delvefolk
         {
             var st = settings;
             if (key == "bonusMode") st.BonusMode = st.BonusMode == "normal" ? "always" : st.BonusMode == "always" ? "never" : "normal";
-            if (key == "exclusiveAbilities") { st.ExclusiveAbilities = !st.ExclusiveAbilities; EnforceExclusive(1); Render(1); }
+            if (key == "exclusiveAbilities") { st.ExclusiveAbilities = !st.ExclusiveAbilities; for (int i = 1; i < N; i++) if (slots[i].Joined) EnforceExclusive(i); }
             if (key == "swapAllies") st.SwapAllies = !st.SwapAllies;
             st.Save();
             // Cambiar las reglas quita el "listo" (todos deben ver las nuevas condiciones)
@@ -378,11 +442,15 @@ namespace Delvefolk
             s.NoteText.text = text;
         }
 
+        // Empieza la partida: los presentes pasan a ser J1, J2... en orden (sin huecos), cada uno con su dispositivo
         void Begin()
         {
             var j = JoinedSlots();
             foreach (var s in j) Loadout(s.I).Save();
-            // J1 siempre está (anfitrión)
+            var binds = new List<DeviceBinding>();
+            var loads = new List<PlayerLoadout>();
+            foreach (var s in j) { binds.Add(g.Bindings[s.I]); loads.Add(g.Loadouts[s.I]); }
+            for (int k = 0; k < j.Count; k++) { g.Bindings[k] = binds[k]; g.Loadouts[k] = loads[k]; }
             Close();
             g.Start(Mathf.Max(1, j.Count));
         }
@@ -393,33 +461,33 @@ namespace Delvefolk
             var input = g.Input;
             if (input.Consume("Escape")) { g.BackToTitle(); return; }
             if (input.Consume("KeyB")) CycleSetting("bonusMode");
-            if (input.Consume("KeyX")) CycleSetting("exclusiveAbilities");
+            if (input.Consume("KeyV")) CycleSetting("exclusiveAbilities");
             if (input.Consume("KeyC")) CycleSetting("swapAllies");
             foreach (var s in slots)
             {
-                var c = new PlayerControls(input, ControlSchemes.All[s.I]);
-                if (!s.Joined)
-                {
-                    if (c.ConsumeAttack()) Join(s.I);
-                    continue;
-                }
+                if (!s.Joined) continue;
+                var c = new PlayerControls(input, g.Bindings[s.I]);
                 int n = RowIds.Length;
                 if (c.MenuPressed(0)) { s.Row = (s.Row - 1 + n) % n; Render(s.I); }
                 if (c.MenuPressed(1)) { s.Row = (s.Row + 1) % n; Render(s.I); }
                 if (c.MenuPressed(2)) Change(s.I, -1);
                 if (c.MenuPressed(3)) Change(s.I, 1);
-                if (c.ConsumeAttack()) ToggleReady(s.I);
-                if (s.I == 1 && c.ConsumeInteract()) Leave(1);
+                if (c.ConsumeConfirm()) ToggleReady(s.I);
+                if (c.ConsumeAbility()) CycleDevice(s.I);
+                if (s.I > 0 && s.Joined && c.ConsumeInteract()) { Leave(s.I); continue; }
                 if (s.NoteT > 0f) { s.NoteT -= dt; if (s.NoteT <= 0f) { s.Note = ""; s.NoteText.text = ""; } }
-                // Si se conecta o desconecta un mando, se actualiza la etiqueta del dispositivo
-                bool padNow = input.Pads[s.I].Connected;
-                if (padNow != s.Pad) { s.Pad = padNow; Render(s.I); }
-                if (s.Joined)
-                {
-                    var lo = Loadout(s.I);
-                    s.Preview.Set(Player.Looks[s.I], lo.Cosmetics, lo.Ability);
-                    s.Preview.Update(dt);
-                }
+                // Si su mando se conecta o desconecta, se actualiza la etiqueta
+                bool ok = Available(g.Bindings[s.I]);
+                if (ok != s.PadOk) { s.PadOk = ok; Render(s.I); }
+                var lo = Loadout(s.I);
+                s.Preview.Set(Player.Looks[s.I], lo.Cosmetics, lo.Ability);
+                s.Preview.Update(dt);
+            }
+            // Unirse: cualquier dispositivo que no use nadie
+            foreach (var b in ControlSchemes.AllDevices())
+            {
+                if (DeviceInUse(b)) continue;
+                if (input.ConsumeAny(ControlSchemes.For(b).Join)) JoinWith(b);
             }
             // Todos los presentes listos → cuenta atrás de 3 s (cancelable)
             if (AllReady())
@@ -433,6 +501,8 @@ namespace Delvefolk
         }
 
         // ---------- Pintado ----------
+        void RenderAll() { for (int i = 0; i < N; i++) Render(i); }
+
         void Render(int i)
         {
             var s = slots[i];
@@ -441,11 +511,21 @@ namespace Delvefolk
             s.Border.color = s.Joined ? (s.Ready ? Color.Lerp(pc, Color.white, 0.35f) : pc) : new Color(pc.r, pc.g, pc.b, 0.45f);
             s.JoinBox.gameObject.SetActive(!s.Joined);
             s.Body.gameObject.SetActive(s.Joined);
-            string dev = g.Input.Pads[i].Connected ? "🎮 mando " + (i + 1) : "⌨ teclado";
+            var b = g.Bindings[i];
+            string dev = b.Label + (!Available(b) ? " <color=#ff6a5a>(sin conectar)</color>" : "");
             s.Conn.text = s.Joined ? dev + " · " + (s.Ready ? "✔ LISTO" : "eligiendo") : "libre";
             s.Conn.color = s.Ready ? MathUtil.Hex(0x7dff8a) : MathUtil.Hex(0xc9b48d);
             s.Conn.fontStyle = s.Ready ? FontStyles.Bold : FontStyles.Normal;
-            if (!s.Joined) return;
+            if (!s.Joined)
+            {
+                bool kbFree = !DeviceInUse(DeviceBinding.KeyA) || !DeviceInUse(DeviceBinding.KeyB);
+                s.JoinText.text = kbFree
+                    ? "Pulsa " + Hud.Key("A") + " en un mando\no " + Hud.Key(!DeviceInUse(DeviceBinding.KeyB) ? "ENTER" : "X") + " en el teclado para unirte"
+                    : "Teclado completo (2 jugadores):\nconecta un mando y pulsa " + Hud.Key("A");
+                return;
+            }
+            var sc = ControlSchemes.For(b);
+            s.Keys.text = (sc.Pad >= 0 ? "Cruceta" : sc.MoveKeys) + " elegir · " + sc.AttackKey + " listo · " + sc.AbilityKey + " cambiar control" + (i > 0 ? " · " + sc.InteractKey + " salir" : "");
             for (int k = 0; k < RowIds.Length; k++)
             {
                 var row = s.Rows[k];
@@ -464,21 +544,11 @@ namespace Delvefolk
             }
             var ab = Abilities.Get(lo.Ability);
             s.CardIcon.text = ab.Icon;
-            s.CardName.text = "<b>" + ab.Name + "</b>\n<size=85%><color=#8a7a62>Enfriamiento " + ab.Cooldown + " s · tecla " + ControlSchemes.All[i].AbilityKey + "</color></size>";
+            s.CardName.text = "<b>" + ab.Name + "</b>\n<size=85%><color=#8a7a62>Enfriamiento " + ab.Cooldown + " s · tecla " + sc.AbilityKey + "</color></size>";
             s.CardShort.text = ab.Short;
             // Ficha corta: solo la ventaja y la desventaja principales
-            s.Pros.text = Lines(First(ab.Pros), "<color=#7dd65b><b>+ </b></color>");
-            s.Cons.text = Lines(First(ab.Cons), "<color=#ff6a5a><b>− </b></color>");
-            s.Allies.text = "";
-        }
-
-        static string[] First(string[] items) { return items != null && items.Length > 0 ? new[] { items[0] } : new string[0]; }
-
-        static string Lines(string[] items, string bullet)
-        {
-            var sb = new System.Text.StringBuilder();
-            for (int k = 0; k < items.Length; k++) { if (k > 0) sb.Append('\n'); sb.Append(bullet).Append(items[k]); }
-            return sb.ToString();
+            s.Pros.text = ab.Pros != null && ab.Pros.Length > 0 ? "<color=#7dd65b><b>+ </b></color>" + ab.Pros[0] : "";
+            s.Cons.text = ab.Cons != null && ab.Cons.Length > 0 ? "<color=#ff6a5a><b>− </b></color>" + ab.Cons[0] : "";
         }
 
         void RenderSettings()

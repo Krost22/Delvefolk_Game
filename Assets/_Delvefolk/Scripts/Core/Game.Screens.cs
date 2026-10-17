@@ -7,8 +7,8 @@ namespace Delvefolk
     public sealed partial class Game
     {
         public LobbyScreen Lobby { get; private set; }
-        static readonly string[] TitleOpen1 = { "Space", "GP0:A" };
-        static readonly string[] TitleOpen2 = { "Enter", "NumpadEnter", "GP1:A" };
+        static readonly string[] TitleOpen1 = { "Space", "KeyX" };
+        static readonly string[] TitleOpen2 = { "Enter", "NumpadEnter" };
 
         partial void InitMoreSystems()
         {
@@ -35,9 +35,14 @@ namespace Delvefolk
         }
 
         // Título → sala de preparación (elegir habilidad y aspecto)
-        public void OpenLobby(int numPlayers = 1)
+        public void OpenLobby(int numPlayers = 1) { OpenLobby(numPlayers, DeviceBinding.KeyA); }
+
+        // j1: dispositivo del J1 (teclado izquierdo o el mando con el que se pulsó)
+        public void OpenLobby(int numPlayers, DeviceBinding j1)
         {
             if (State != GameState.Title) return;
+            Bindings[0] = j1;
+            if (numPlayers > 1) Bindings[1] = j1.Equals(DeviceBinding.KeyB) ? DeviceBinding.KeyA : DeviceBinding.KeyB;
             Ui.ShowTitle(false);
             Input.Clear();
             State = GameState.Lobby;
@@ -57,7 +62,10 @@ namespace Delvefolk
         // Espacio / A del mando 1 → sala con 1 jugador; Enter / A del mando 2 → sala con 2
         partial void TitleInput(ref bool handled)
         {
-            if (Input.ConsumeAny(TitleOpen1)) { OpenLobby(1); handled = true; }
+            if (Input.ConsumeAny(TitleOpen1)) { OpenLobby(1); handled = true; return; }
+            // A o START en un mando: el J1 juega con ese mando
+            for (int n = 0; n < ControlSchemes.MaxPads; n++)
+                if (Input.ConsumeAny(ControlSchemes.Pad(n).Join)) { OpenLobby(1, DeviceBinding.PadSlot(n)); handled = true; return; }
             else if (Input.ConsumeAny(TitleOpen2)) { OpenLobby(2); handled = true; }
         }
 

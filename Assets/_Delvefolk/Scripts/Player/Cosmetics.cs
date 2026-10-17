@@ -72,12 +72,12 @@ namespace Delvefolk
         public static CosmeticDef Get(string id) { CosmeticDef d; return id != null && Items.TryGetValue(id, out d) ? d : null; }
         public static List<CosmeticDef> List(string slot) { List<CosmeticDef> l; return BySlot.TryGetValue(slot, out l) ? l : new List<CosmeticDef>(); }
 
-        // Selección por defecto de cada jugador (J1 con olla y musgo, J2 con embudo y río)
+        // Selección por defecto de cada jugador (J1 olla y musgo, J2 embudo y río, J3 casco y calabaza, J4 capucha y ciruela)
         public static Dictionary<string, string> Defaults(int index)
         {
-            return index == 0
-                ? new Dictionary<string, string> { { "head", "pot" }, { "body", "tunic" }, { "acc", "none_acc" }, { "palette", "moss" }, { "material", "cloth" }, { "fx", "none_fx" } }
-                : new Dictionary<string, string> { { "head", "funnel" }, { "body", "tunic" }, { "acc", "none_acc" }, { "palette", "river" }, { "material", "cloth" }, { "fx", "none_fx" } };
+            string[] heads = { "pot", "funnel", "helmet", "hood" }, palettes = { "moss", "river", "pumpkin", "plum" };
+            int k = Mathf.Clamp(index, 0, heads.Length - 1);
+            return new Dictionary<string, string> { { "head", heads[k] }, { "body", "tunic" }, { "acc", "none_acc" }, { "palette", palettes[k] }, { "material", "cloth" }, { "fx", "none_fx" } };
         }
 
         public struct Removed { public string Slot; public CosmeticDef Item, BlockedBy; }

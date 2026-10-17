@@ -80,7 +80,8 @@ namespace Delvefolk.Tests
             Step(Mathf.CeilToInt(BossConfig.IntroTime * 60f) + 2);
             var b = (CrupierBoss)G.BossFloor.BossList[0];
             Assert.IsTrue(b.IsAwake);
-            Assert.Greater(b.Casino.RedTiles.Count, 20, "suelo a cuadros rojos");
+            Assert.Greater(b.Casino.RedTiles.Count, 20, "alfombras rojas");
+            Assert.IsTrue(b.Casino.Room.UsedModels, "sala montada con los modelos");
             b.Die("hit");
             Step(2);
             Assert.AreEqual("won", G.BossFloor.Phase);
@@ -249,19 +250,19 @@ namespace Delvefolk.Tests
 
         // ---------- Habilidades ----------
         [UnityTest]
-        public IEnumerator Rojo_QuemaLasCasillasRojasPeroNoLasNegras()
+        public IEnumerator Rojo_QuemaLasAlfombrasRojasPeroNoLaPiedra()
         {
             var b = Crupier();
             var d = G.Dungeon;
             var red = b.Casino.RedTiles.First(t => d.TypeAt(t.x + 1, t.y) == TileType.Floor && d.Blocked[d.Idx(t.x + 1, t.y)] == 0
-                && MathUtil.Hypot(Grid.X(t.x) - b.X, Grid.Z(t.y) - b.Z) > 5f);
+                && !b.Casino.RedTiles.Contains(new Vector2Int(t.x + 1, t.y)) && MathUtil.Hypot(Grid.X(t.x) - b.X, Grid.Z(t.y) - b.Z) > 5f);
             Player p1 = G.Players[0], p2 = G.Players[1];
             System.Action hold = () => { PutU(p1, Grid.X(red.x), Grid.Z(red.y)); PutU(p2, Grid.X(red.x + 1), Grid.Z(red.y)); };
             hold();
             Spin(b, RouletteOutcome.Rojo);
             for (int i = 0; i < Mathf.CeilToInt((HouseBurnsAbility.Warn + 1.5f) * 60f); i++) { hold(); Step(1); }
             Assert.Less(p1.Hp, 100f, "en rojo quema");
-            Assert.AreEqual(100f, p2.Hp, "en negro no");
+            Assert.AreEqual(100f, p2.Hp, "en la piedra no");
             RunBoss(b, RouletteState.Cooldown);
             Assert.AreEqual(b.Casino.Hazard.CellCount, b.Casino.Hazard.Count(HazardFloor.CellState.Safe));
             yield break;

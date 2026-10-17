@@ -86,17 +86,20 @@ MonoBehaviour:
   Cooldown: 6
   Phase2CooldownMult: 0.6
   MaxEffectTime: 15
-  SpinAxis: {x: 0, y: 0, z: 1}
-  ReferenceDir: {x: 0, y: 1, z: 0}
+  SpinAxis: {x: 0, y: -1, z: 0}
+  ReferenceDir: {x: 0, y: 0, z: 1}
   Clockwise: 1
   PointerAngle: 0
   CrupierModel: {fileID: 0}
   CrupierHeight: 2.6
-  WheelModel: {fileID: 0}
-  WheelSpinnerPath: 
+  WheelModel: {fileID: 6591775526919551938, guid: 2a19af6618b84364bbb38936687d86f1, type: 3}
+  WheelSpinnerPath: Modelo/Giro
   WheelOffset: {x: 0, y: 4.5, z: 0}
   WheelEuler: {x: 0, y: 0, z: 0}
-  WheelScale: 1
+  WheelScale: 2
+  WheelSegmentsInner: 0.0020997901
+  WheelSegmentsOuter: 0.006752043
+  WheelSegmentsDepth: -0.001282908
   LogResults: 1
   ForceOutcomeEnabled: 0
   ForcedOutcome: 0

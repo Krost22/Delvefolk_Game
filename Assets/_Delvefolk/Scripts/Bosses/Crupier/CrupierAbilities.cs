@@ -4,13 +4,14 @@ using UnityEngine;
 namespace Delvefolk
 {
     // ---------------------------------------------------------------- Sala de casino
-    // Suelo a cuadros rojos y negros (las casillas rojas son las que quema el resultado ROJO), fichas del
+    // Sala del trono (CasinoRoom: sus alfombras rojas son las casillas que quema el resultado ROJO), fichas del
     // jackpot y mesas que suben del suelo (resultado AZUL). Todo cuelga del piso: se va con él.
     public sealed class CasinoFloor
     {
         readonly Game G;
         public readonly List<Vector2Int> RedTiles = new List<Vector2Int>();
         public readonly HazardFloor Hazard;
+        public readonly CasinoRoom Room;
         public readonly List<CasinoChip> Chips = new List<CasinoChip>();
         public readonly List<CasinoTable> Tables = new List<CasinoTable>();
         public readonly int W, H;
@@ -22,22 +23,9 @@ namespace Delvefolk
             G = g;
             var bf = g.BossFloor;
             W = bf != null ? bf.ArenaW : 19; H = bf != null ? bf.ArenaH : 15;
-            var d = g.Dungeon;
-            var carpet = new MeshBuilder();
-            var quad = ProcMesh.Plane(Cfg.Tile, Cfg.Tile).RotateX(-Mathf.PI / 2f);
-            Color red = MathUtil.Hex(0xb81c22), black = MathUtil.Hex(0x121016);
-            for (int z = 3; z <= H - 2; z++)
-                for (int x = 1; x <= W - 2; x++)
-                {
-                    if (d.TypeAt(x, z) != TileType.Floor) continue;
-                    bool isRed = (x + z) % 2 == 0;
-                    if (isRed && d.Blocked[d.Idx(x, z)] == 0) RedTiles.Add(new Vector2Int(x, z));
-                    carpet.Add(quad, new Vector3(Grid.X(x), 0.02f, Grid.Z(z)), isRed ? red : black);
-                }
-            var go = CharacterModel.MeshObject(g.FloorRoot, "AlfombraCasino", carpet.ToMesh("alfombraCasino"), Mats.Transparent, Vector3.zero);
-            Shape.SetOpacity(go.GetComponent<Renderer>(), 0.55f);
-            // Sobre la alfombra roja, el fuego va en naranja vivo y el aviso en amarillo (si no, no se distinguen)
-            Hazard = new HazardFloor(g, g.FloorRoot, RedTiles, 22f, 0xff7a10, 0xffe040, 0f);
+            Room = new CasinoRoom(g, W, H);
+            RedTiles.AddRange(Room.RedTiles);
+            Hazard = new HazardFloor(g, g.FloorRoot, RedTiles, 22f, 0xff7a10, 0xffe040, 0f, CasinoRoom.CarpetThickness + 0.06f);
         }
 
         public void SetRed(HazardFloor.CellState s) { foreach (var t in RedTiles) Hazard.Set(t.x, t.y, s); }
@@ -152,7 +140,7 @@ namespace Delvefolk
             ClearTables();
         }
 
-        public void Destroy() { ClearAll(); }
+        public void Destroy() { ClearAll(); Room.Destroy(); }
 
         // Sitios libres dentro de la arena: suelo normal, lejos de jugadores, del jefe, de mesas y entre sí
         public List<Vector2> FreeSpots(int n, float fromPlayers, Entity avoid, float fromAvoid)

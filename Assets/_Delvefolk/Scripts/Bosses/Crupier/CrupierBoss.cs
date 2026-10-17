@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Delvefolk
 {
-    // 🎰 EL CRUPIER — jefe final provisional de la demo, en una sala de casino con el suelo a cuadros rojos y negros.
+    // 🎰 EL CRUPIER — jefe final provisional de la demo, en la sala del trono del casino (CasinoRoom).
     // Sus golpes normales: barrido con el rastrillo (de cerca) y abanico de cartas (se pueden devolver).
     // Cada pocos segundos gira su RULETA MÁGICA (RouletteController): el resultado se elige con los pesos de
     // Resources/CrupierRoulette y activa una de sus seis habilidades (CrupierAbilities.cs).
@@ -362,9 +362,8 @@ namespace Delvefolk
             Bosses.Register("crupier", new BossEntry
             {
                 Name = "El Crupier", Title = "La banca siempre gana", Icon = "🎰",
-                Hint = "Su ruleta decide la jugada. ROJO: el suelo rojo quema (pisa el negro). VERDE: escudo que se rompe a golpes. DORADO: fichas con premio para vosotros.",
-                ArenaW = 19, ArenaH = 15, Fog = 0x0b0612,
-                Decorate = (put, W, H) => { put(3, 4, 'v'); put(W - 4, 4, 'v'); put(2, H - 4, 'v'); put(W - 3, H - 4, 'v'); },
+                Hint = "Su ruleta decide la jugada. ROJO: las alfombras rojas queman (pisa la piedra). VERDE: escudo que se rompe a golpes. DORADO: fichas con premio para vosotros.",
+                ArenaW = 21, ArenaH = 19, Fog = 0x0b0612,   // la sala del trono la monta CasinoRoom
                 Spawn = (g, x, z) => new List<Boss> { new CrupierBoss(g, x, z) },
             });
         }

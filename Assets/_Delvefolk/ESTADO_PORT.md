@@ -41,10 +41,19 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
   girar y la rueda se detiene en su segmento; si el indicador no coincide, `LogError` "[Ruleta] El indicador señala…".
 - Configuración: `Resources/CrupierRoulette.asset` (pesos, tiempos, curva, eje, sentido, ángulo del indicador y de cada
   segmento, modelos y herramientas de PRUEBA: forzar resultado y girar sin habilidad, solo en editor / build de desarrollo).
-- **Modelos pendientes (placeholder por código)**: cuando subas los modelos, asígnalos en `CrupierRoulette.asset`:
-  `CrupierModel` (+ `CrupierHeight`) y `WheelModel` (+ `WheelSpinnerPath` si solo gira un hijo). Con la rueda real hay que
+- **Modelo del Crupier pendiente (placeholder por código)**: asígnalo en `CrupierRoulette.asset`: `CrupierModel`
+  (+ `CrupierHeight`). La rueda ya usa el modelo real (`WheelModel` (+ `WheelSpinnerPath` si solo gira un hijo). Con la rueda real hay que
   ajustar `SpinAxis`, `ReferenceDir`, `PointerAngle`, `Clockwise` y los ángulos (o `UniformAngles`) a su orientación;
   la prueba `Ruleta_SeDetieneEnElSegmentoElegidoYFrenaPocoAPoco` y el aviso de desajuste lo comprueban.
+- **Sala del trono (escenario del jefe final)**: `CasinoRoom` monta la sala de la referencia con los modelos de Meshy de
+  `Assets/_Custom/Jefe final escenario models`: trono y dos leones al fondo con cortinas, alfombra octogonal con corona
+  (girada 45°), pasillos de tréboles en cruz, cuatro columnas de picas, mesas de casino en las esquinas con candelabros y
+  luces, y tragaperras en las paredes. Las casillas con alfombra roja son las que quema el resultado ROJO. Sin los
+  modelos, solo se dibuja la alfombra roja por código.
+- `Delvefolk/Preparar sala del Crupier` (`Editor/CasinoSetup.cs`): materiales URP con textura y normales (en
+  `Art/JefeFinal`, reasignados en cada FBX), catálogo `Resources/CasinoArt` y la rueda de la fortuna partida en marco
+  fijo + centro que gira (`RuedaCrupier.prefab`); los segmentos de color los dibuja el juego dentro del marco. Repetirlo
+  si cambian los modelos.
 - Pruebas: `RouletteLogicTests` (5, EditMode) y `CrupierTests` (14, PlayMode). Totales: EditMode 52/52, PlayMode 130/130.
 
 ## Pendiente

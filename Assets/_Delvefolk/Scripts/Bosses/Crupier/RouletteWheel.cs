@@ -52,6 +52,8 @@ namespace Delvefolk
                 if (!sp && !string.IsNullOrEmpty(cfg.WheelSpinnerPath))
                     Debug.LogWarning("[Ruleta] No encuentro '" + cfg.WheelSpinnerPath + "' dentro de " + cfg.WheelModel.name + ": gira el modelo entero.");
                 spinner = sp ? sp : go.transform;
+                // El disco del modelo no tiene nuestros colores: se dibujan encima, dentro del marco
+                if (cfg.WheelSegmentsOuter > cfg.WheelSegmentsInner) BuildSegments(spinner, cfg.WheelSegmentsInner, cfg.WheelSegmentsOuter, cfg.WheelSegmentsDepth);
             }
             else
             {
@@ -119,28 +121,37 @@ namespace Delvefolk
 
             var sp = new GameObject("Giro").transform;
             sp.SetParent(orient, false);
+            var lines = new MeshBuilder();
+            BuildSegments(sp, 0.32f, R, -0.04f);
+            lines.Add(ProcMesh.Cylinder(0.34f, 0.34f, 0.2f, 16), Matrix4x4.TRS(-Axis * 0.06f, up, Vector3.one), gold);
+            lines.Add(ProcMesh.Sphere(0.16f, 8, 6), -Axis * 0.2f, MathUtil.Hex(0xfff2c0));
+            CharacterModel.MeshObject(sp, "Adornos", lines.ToMesh("adornosRuleta"), Mats.Lit, Vector3.zero);
+            return sp;
+        }
+
+        // Segmentos de colores (con separadores dorados, marca central y brillo del ganador) entre r0 y r1,
+        // desplazados depth a lo largo del eje (negativo = hacia la cámara). Sirve para el placeholder y para
+        // rellenar el disco del modelo real con los colores de la configuración
+        void BuildSegments(Transform sp, float r0, float r1, float depth)
+        {
+            float k = r1 / R;
+            Color gold = MathUtil.Hex(0xe8c050);
             var segs = new MeshBuilder();
             var lines = new MeshBuilder();
-            var glowMesh = new List<Mesh>();
             for (int i = 0; i < angles.Length; i++)
             {
                 float a = angles[i], h = HalfWidth(i);
-                segs.Add(Wedge(a - h, a + h, 0.32f, R, -0.04f), Vector3.zero, cfg.Segments[i].Color);
-                // Separador dorado en el borde del segmento
+                segs.Add(Wedge(a - h, a + h, r0, r1, depth), Vector3.zero, cfg.Segments[i].Color);
                 var e = Dir(a + h);
-                lines.Add(ProcMesh.Box(0.06f, R - 0.3f, 0.04f), Matrix4x4.TRS(e * (R + 0.32f) / 2f - Axis * 0.07f, Quaternion.LookRotation(Axis, e), Vector3.one), gold);
-                // Marca blanca en el centro (para leer el ángulo del segmento)
-                lines.Add(ProcMesh.Sphere(0.09f, 6, 4), Dir(a) * (R - 0.22f) - Axis * 0.08f, MathUtil.Hex(0xfff6e0));
-                var gm = new MeshBuilder().Add(Wedge(a - h, a + h, 0.32f, R + 0.05f, -0.1f), Vector3.zero, Color.white).ToMesh("brilloRuleta");
+                lines.Add(ProcMesh.Box(0.06f * k, r1 - r0, 0.04f * k), Matrix4x4.TRS(e * (r0 + r1) / 2f + Axis * depth * 1.75f, Quaternion.LookRotation(Axis, e), Vector3.one), gold);
+                lines.Add(ProcMesh.Sphere(0.09f * k, 6, 4), Dir(a) * (r1 - 0.22f * k) + Axis * depth * 2f, MathUtil.Hex(0xfff6e0));
+                var gm = new MeshBuilder().Add(Wedge(a - h, a + h, r0, r1 * 1.03f, depth * 2.5f), Vector3.zero, Color.white).ToMesh("brilloRuleta");
                 var go = CharacterModel.MeshObject(sp, "Brillo" + i, gm, Mats.Additive, Vector3.zero);
                 go.SetActive(false);
                 glow.Add(go);
             }
-            lines.Add(ProcMesh.Cylinder(0.34f, 0.34f, 0.2f, 16), Matrix4x4.TRS(-Axis * 0.06f, up, Vector3.one), gold);
-            lines.Add(ProcMesh.Sphere(0.16f, 8, 6), -Axis * 0.2f, MathUtil.Hex(0xfff2c0));
             CharacterModel.MeshObject(sp, "Segmentos", segs.ToMesh("segmentosRuleta"), Mats.Unlit, Vector3.zero);
-            CharacterModel.MeshObject(sp, "Adornos", lines.ToMesh("adornosRuleta"), Mats.Lit, Vector3.zero);
-            return sp;
+            CharacterModel.MeshObject(sp, "Separadores", lines.ToMesh("separadoresRuleta"), Mats.Lit, Vector3.zero);
         }
 
         // ---------- Giro ----------

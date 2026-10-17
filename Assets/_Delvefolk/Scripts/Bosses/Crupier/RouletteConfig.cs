@@ -54,6 +54,9 @@ namespace Delvefolk
         [Tooltip("Posición de la rueda respecto al Crupier")] public Vector3 WheelOffset = new Vector3(0f, 4.5f, 0f);
         [Tooltip("Rotación extra de la rueda (grados) sobre la orientación hacia la cámara")] public Vector3 WheelEuler = Vector3.zero;
         public float WheelScale = 1f;
+        [Tooltip("Con WheelModel: radio interior y exterior de los segmentos de color que dibuja el juego (espacio local de la pieza que gira; 0 = no dibuja)")]
+        public float WheelSegmentsInner, WheelSegmentsOuter;
+        [Tooltip("Desplazamiento de esos segmentos a lo largo del eje (negativo = hacia la cámara)")] public float WheelSegmentsDepth;
 
         [Header("PRUEBAS (solo en el editor o en builds de desarrollo)")]
         [Tooltip("Muestra en la consola pesos, probabilidades y el resultado de cada tirada")] public bool LogResults = true;

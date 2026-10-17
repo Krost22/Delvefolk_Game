@@ -31,7 +31,7 @@ namespace Delvefolk
         readonly MaterialPropertyBlock mpb = new MaterialPropertyBlock();
         static Mesh quad;
 
-        public HazardFloor(Game game, Transform parent, IEnumerable<Vector2Int> tiles, float dps = 12f, int color = 0xd0302a, int warnColor = 0xffa030, float enemyMult = 0.8f)
+        public HazardFloor(Game game, Transform parent, IEnumerable<Vector2Int> tiles, float dps = 12f, int color = 0xd0302a, int warnColor = 0xffa030, float enemyMult = 0.8f, float y = 0.03f)
         {
             g = game;
             Dps = dps; Color = color; WarnColor = warnColor; EnemyMult = enemyMult;
@@ -40,7 +40,7 @@ namespace Delvefolk
             if (!quad) quad = new MeshBuilder().Add(ProcMesh.Plane(Cfg.Tile * 0.98f, Cfg.Tile * 0.98f).RotateX(-Mathf.PI / 2f), Vector3.zero, UnityEngine.Color.white).ToMesh("casillaPeligro");
             foreach (var t in tiles)
             {
-                var go = CharacterModel.MeshObject(group, "Casilla", quad, Mats.Transparent, new Vector3(Grid.X(t.x), 0.03f, Grid.Z(t.y)));
+                var go = CharacterModel.MeshObject(group, "Casilla", quad, Mats.Transparent, new Vector3(Grid.X(t.x), y, Grid.Z(t.y)));
                 go.SetActive(false);
                 var c = new Cell { Tx = t.x, Tz = t.y, State = CellState.Safe, R = go.GetComponent<MeshRenderer>() };
                 cells[Key(t.x, t.y)] = c;

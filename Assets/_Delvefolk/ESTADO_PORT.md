@@ -13,10 +13,12 @@ Original (three.js): `C:\Users\eduar\OneDrive\Documentos\Proyectos juegos web\De
 
 El juego es jugable de principio a fin: título → lobby → pisos → pisos bonus → siguiente piso.
 
+## Hecho (fase 7)
+- Tienda tras cada bonus (`Scripts/Shop/ShopFloor.cs`, `Core/Game.Shop.cs`), Duende Tendero (`Entities/ShopKeeper.cs`),
+  armas especiales y escopeta (`Items/SpecialWeapons.cs`), barra de jefe del HUD (`UI/HudBoss.cs`).
+- Pruebas `ShopTests` (5). Totales: EditMode 47/47, PlayMode 78/78.
+
 ## Pendiente
-- **Fase 7 tienda**: tras un bonus, `Game.AfterBonus` usa el gancho parcial `AfterBonusHooks`; si no existe va
-  directo a `ProceedToFloor`. Falta Shop.js (Duende Tendero, armas especiales, escopeta). Al hacerla, ajustar
-  las pruebas de bonus que esperan el siguiente piso (deberán esperar `InShop`).
 - **Fase 8 jefes**: `Game.Bonus.cs` ya llama a `InitShopAndBosses`, `BossSystemsUpdate`, `BossDescend` (parciales vacíos/no
   implementados). Falta Boss, BossFloor, Golem, Twins, Chef, Bell, telegrafías, oleadas, proyectiles.
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.

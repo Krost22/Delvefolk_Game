@@ -30,6 +30,12 @@ namespace Delvefolk
             Register('J', "chairleg", () => new ChairLegWeapon());
             Register('h', "chicken", () => new ChickenFood());
             Register('q', "cheese", () => new CheeseFood());
+            // Armas especiales: sin letra de mapa (no salen en la mazmorra; solo en la tienda o del jefe)
+            Register('\0', "sword", () => new SwordWeapon());
+            Register('\0', "maul", () => new MaulWeapon());
+            Register('\0', "spear", () => new SpearWeapon());
+            Register('\0', "axe", () => new AxeWeapon());
+            Register('\0', "shotgun", () => new ShotgunWeapon());
             RegisterExtra();
         }
 

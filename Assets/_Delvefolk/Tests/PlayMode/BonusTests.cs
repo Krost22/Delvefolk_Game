@@ -174,9 +174,9 @@ namespace Delvefolk.Tests
             Assert.AreEqual("¡DESAFÍO SUPERADO!", G.Ui.BonusTagText);
             string gear = JsonUtility.ToJson(p1.Gear.GetState());
             TapAll("Space", "Enter"); Step(1);
-            // Sin tienda todavía (fase 7): se sigue al piso siguiente
             Assert.AreEqual(GameState.Play, G.State);
-            Assert.AreEqual(2, G.Floor);
+            Assert.IsTrue(G.InShop, "tras el bonus, la tienda");
+            Assert.AreEqual(2, G.Shop.Next, "que lleva al piso 2");
             Assert.IsFalse(G.InBonus);
             Player q1 = G.Players[0], q2 = G.Players[1];
             Assert.IsFalse(q2.Spectator, "el eliminado vuelve a la normalidad");
@@ -203,7 +203,8 @@ namespace Delvefolk.Tests
             Assert.AreEqual("DESAFÍO FALLIDO", G.Ui.BonusTagText);
             TapAll("Space", "Enter"); Step(1);
             Assert.AreEqual(GameState.Play, G.State);
-            Assert.AreEqual(2, G.Floor);
+            Assert.IsTrue(G.InShop);
+            Assert.AreEqual(2, G.Shop.Next);
             Assert.IsTrue(G.Players.All(p => !p.Dead));
             yield break;
         }

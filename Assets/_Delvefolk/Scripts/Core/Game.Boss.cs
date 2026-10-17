@@ -48,6 +48,7 @@ namespace Delvefolk
         public bool BossDue(int from)
         {
             if (ForceBoss != null) return true;
+            if (BossConfig.DemoFinalBoss != null) return Settings.bosses && from == LevelData.Levels.Length && !BossDone.Contains(from);
             return Settings.bosses && from % BossConfig.EveryFloors == 0 && !BossDone.Contains(from);
         }
 
@@ -70,7 +71,7 @@ namespace Delvefolk
         {
             if (id == null)
             {
-                id = ForceBoss ?? BossConfig.Order[BossCount % BossConfig.Order.Length];
+                id = ForceBoss ?? BossConfig.DemoFinalBoss ?? BossConfig.Order[BossCount % BossConfig.Order.Length];
                 ForceBoss = null;
                 BossCount++;
             }

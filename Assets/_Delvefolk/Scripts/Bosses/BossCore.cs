@@ -17,6 +17,10 @@ namespace Delvefolk
     {
         public const int EveryFloors = 2;                                           // jefe al terminar los pisos 2, 4, 6...
         public static readonly string[] Order = { "golem", "twins", "chef", "bell" };   // orden en que aparecen
+        // DEMO: si no es null, los jefes normales se apartan y solo hay este jefe, al bajar del último piso
+        // (justo antes de la pantalla de victoria). Ponlo a null para volver a los jefes cada 2 pisos.
+        public const string DemoBossDefault = "crupier";
+        public static string DemoFinalBoss = DemoBossDefault;
         public const float HpPerExtraPlayer = 0.6f;                                 // +60 % de vida por cada jugador extra
         public const float HpPerEncounter = 0.25f;                                  // +25 % por cada jefe ya visto
         public const float IntroTime = 2.5f;                                        // presentación antes de despertar
@@ -594,12 +598,13 @@ namespace Delvefolk
     {
         public static void All()
         {
-            Golem(); Twins(); Chef(); Bell();
+            Golem(); Twins(); Chef(); Bell(); Crupier();
         }
 
         static partial void Golem();
         static partial void Twins();
         static partial void Chef();
         static partial void Bell();
+        static partial void Crupier();
     }
 }

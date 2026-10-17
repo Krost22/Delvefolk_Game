@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa38a5110b4638c43982226e08c33189, type: 3}
+  m_Name: CrupierRoulette
+  m_EditorClassIdentifier: Delvefolk::Delvefolk.RouletteConfig
+  Segments:
+  - Outcome: 0
+    Weight: 30
+    AngleDeg: 0
+    Color: {r: 0.84705883, g: 0.15686275, b: 0.16470589, a: 1}
+    Probability: 30
+  - Outcome: 1
+    Weight: 25
+    AngleDeg: 60
+    Color: {r: 0.18431373, g: 0.68235296, b: 0.2901961, a: 1}
+    Probability: 25
+  - Outcome: 2
+    Weight: 20
+    AngleDeg: 120
+    Color: {r: 0.10980392, g: 0.10980392, b: 0.13333334, a: 1}
+    Probability: 20
+  - Outcome: 3
+    Weight: 10
+    AngleDeg: 180
+    Color: {r: 0.9490196, g: 0.7607843, b: 0.1882353, a: 1}
+    Probability: 10
+  - Outcome: 4
+    Weight: 10
+    AngleDeg: 240
+    Color: {r: 0.18431373, g: 0.43529412, b: 0.84705883, a: 1}
+    Probability: 10
+  - Outcome: 5
+    Weight: 5
+    AngleDeg: 300
+    Color: {r: 0.5411765, g: 0.24705882, b: 0.8156863, a: 1}
+    Probability: 5
+  UniformAngles: 1
+  PrepareTime: 1
+  SpinDuration: 3.2
+  InitialSpeed: 0
+  MinTurns: 3
+  MaxTurns: 5
+  Deceleration:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 3
+      outSlope: 3
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.875
+      inSlope: 0.75
+      outSlope: 0.75
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  RevealPause: 0.8
+  Cooldown: 6
+  Phase2CooldownMult: 0.6
+  MaxEffectTime: 15
+  SpinAxis: {x: 0, y: 0, z: 1}
+  ReferenceDir: {x: 0, y: 1, z: 0}
+  Clockwise: 1
+  PointerAngle: 0
+  CrupierModel: {fileID: 0}
+  CrupierHeight: 2.6
+  WheelModel: {fileID: 0}
+  WheelSpinnerPath: 
+  WheelOffset: {x: 0, y: 4.5, z: 0}
+  WheelEuler: {x: 0, y: 0, z: 0}
+  WheelScale: 1
+  LogResults: 1
+  ForceOutcomeEnabled: 0
+  ForcedOutcome: 0
+  SpinWithoutAbility: 0

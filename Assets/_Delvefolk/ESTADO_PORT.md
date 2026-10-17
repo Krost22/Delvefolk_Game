@@ -28,6 +28,25 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
 - §11 resuelta: el rodillo de Último Aliento se esquiva saltando (`JumpY > DodgeHeight·0.6` ≈ 0.51), como dice su viñeta.
   Prueba `UltimoAliento_ElRodilloSeEsquivaSaltando`. Totales: EditMode 47/47, PlayMode 116/116.
 
+## Demo: un solo jefe final, El Crupier (2026-10-17)
+- Los jefes normales están apartados, no borrados: `BossConfig.DemoFinalBoss = "crupier"` (`Bosses/BossCore.cs`) hace que
+  solo haya un jefe, al bajar del último piso (`LevelData.Levels.Length`), justo antes de la victoria. Para volver a
+  Gólem → Gemelos → Chef → Campana cada 2 pisos, ponlo a `null`. Las pruebas lo ponen a `null` en `GameTestBase`.
+- Código en `Scripts/Bosses/Crupier/`: `RouletteConfig` (ScriptableObject + `RouletteMath`), `RouletteWheel` (visual),
+  `RouletteController` (estados Idle → Preparing → Spinning → Revealing → ApplyingEffect → Cooldown, `IRouletteAbility`,
+  `RouletteAbilityHandler`), `CrupierBoss` (rastrillo, abanico de cartas, ruleta) y `CrupierAbilities` (sala de casino y las
+  6 habilidades: rojo quema las casillas rojas, verde escudo rompible, negro ráfagas de fichas, dorado fichas con premio,
+  azul mesas que suben, morado ilusión).
+- La ruleta va con el bucle del juego (no coroutines) y la semilla de la partida (`G.Rand`): el resultado se elige antes de
+  girar y la rueda se detiene en su segmento; si el indicador no coincide, `LogError` "[Ruleta] El indicador señala…".
+- Configuración: `Resources/CrupierRoulette.asset` (pesos, tiempos, curva, eje, sentido, ángulo del indicador y de cada
+  segmento, modelos y herramientas de PRUEBA: forzar resultado y girar sin habilidad, solo en editor / build de desarrollo).
+- **Modelos pendientes (placeholder por código)**: cuando subas los modelos, asígnalos en `CrupierRoulette.asset`:
+  `CrupierModel` (+ `CrupierHeight`) y `WheelModel` (+ `WheelSpinnerPath` si solo gira un hijo). Con la rueda real hay que
+  ajustar `SpinAxis`, `ReferenceDir`, `PointerAngle`, `Clockwise` y los ángulos (o `UniformAngles`) a su orientación;
+  la prueba `Ruleta_SeDetieneEnElSegmentoElegidoYFrenaPocoAPoco` y el aviso de desajuste lo comprueban.
+- Pruebas: `RouletteLogicTests` (5, EditMode) y `CrupierTests` (14, PlayMode). Totales: EditMode 52/52, PlayMode 130/130.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el

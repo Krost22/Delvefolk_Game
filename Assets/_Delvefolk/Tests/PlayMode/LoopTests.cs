@@ -17,6 +17,7 @@ namespace Delvefolk.Tests
             GameLoop.AutoRun = false;
             GameLoop.SeedOverride = 1234u;
             Storage.Enabled = false;
+            BossConfig.DemoFinalBoss = null;   // las pruebas usan los jefes normales salvo que pidan la demo
             Loop = new GameObject("Bootstrap").AddComponent<GameLoop>();
             G.InstantTransitions = true;
         }
@@ -28,6 +29,7 @@ namespace Delvefolk.Tests
             GameLoop.AutoRun = true;
             GameLoop.SeedOverride = 0;
             Storage.Enabled = true;
+            BossConfig.DemoFinalBoss = BossConfig.DemoBossDefault;
         }
 
         protected void Step(int frames = 1) { Loop.Steps(frames); }

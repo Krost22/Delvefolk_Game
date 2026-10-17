@@ -7,7 +7,7 @@ using UnityEngine.TestTools;
 namespace Delvefolk.Tests
 {
     // Fase 8: sistema de jefes y Gólem (port de tests/bosses.test.js y tests/boss-golem.test.js)
-    public class BossTests : GameTestBase
+    public abstract class BossTestBase : GameTestBase
     {
         // T.boss: combate de jefe directo (sin pasar por los pisos), con el jefe ya despierto
         protected BossFloor StartBoss(string id, int n = 2)
@@ -30,6 +30,10 @@ namespace Delvefolk.Tests
         {
             p.JumpY = 1.2f; p.JumpV = 0; p.Body.Airborne = true; Put(p, webX, webZ);
         }
+    }
+
+    public class BossTests : BossTestBase
+    {
 
         // ---------- Sistema común ----------
         [UnityTest]

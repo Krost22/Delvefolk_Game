@@ -402,6 +402,7 @@ namespace Delvefolk
         public bool HoldVictory;          // impide la victoria aunque esté muerto (p. ej. va a revivir)
         public float[] PhaseThresholds = { 0.5f };
         public float PatternGap = 0.9f;
+        public bool HoldStill;            // sin patrón en curso no se mueve (pruebas)
         float clangT = -10f;
 
         // Valores por defecto de un jefe; cada uno ajusta lo suyo
@@ -492,7 +493,7 @@ namespace Delvefolk
                 var p = ChoosePattern(player, dist);
                 if (p != null) { StartPattern(p); return true; }
             }
-            mv = Idle(dt, player, dist, dx, dz);
+            mv = HoldStill ? Vector2.zero : Idle(dt, player, dist, dx, dz);
             return true;
         }
 

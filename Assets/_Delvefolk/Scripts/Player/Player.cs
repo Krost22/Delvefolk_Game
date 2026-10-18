@@ -102,6 +102,9 @@ namespace Delvefolk
 
         public void SetWeapon(Weapon w)
         {
+            // Lo que deja de llevar en la mano suelta lo que tuviera dentro (la aspiradora)
+            var old = Weapon as ElementalWeapon;
+            if (old != null && old != w) old.OnUnequip(this, G);
             if (weaponModel) Object.Destroy(weaponModel);
             Weapon = w;
             weaponModel = w.BuildDisplayModel(Parts.Holder);
@@ -136,6 +139,7 @@ namespace Delvefolk
             if (JumpY == 0f && !Exhausted && StunT <= 0f && StaminaT >= JumpConfig.RegenDelay && Stamina < JumpConfig.Stamina)
                 Stamina = Mathf.Min(JumpConfig.Stamina, Stamina + JumpConfig.Regen * dt);
             if (Gear.Update(dt)) G.Ui.SetGear(Index, Gear);
+            TickElemental(dt);
             if (StunT > 0f)
             {
                 StunT = Mathf.Max(0f, StunT - dt);

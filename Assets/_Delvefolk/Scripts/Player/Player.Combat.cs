@@ -26,22 +26,26 @@ namespace Delvefolk
 
         partial void IsEatingImpl(ref bool v) { v = Eating != null; }
         partial void IsAttackingImpl(ref bool v) { v = Attack != null; }
-        partial void CancelAttackImpl() { Attack = null; }
+        partial void CancelAttackImpl() { Attack = null; CancelSpecial(); }
 
         partial void OnWeaponChanged()
         {
             Attack = null;
             Eating = null;
+            CancelSpecial();
         }
 
         partial void MoveMultiplierImpl(ref float m)
         {
             if (Attack != null && Attack.Phase != AttackPhase.Recovery) m = Weapon.MoveMult;
             if (Eating != null) m = Weapon.EatMoveMult;
+            var ew = Weapon as ElementalWeapon;
+            if (ew != null && Special != null) m = ew.SpecialMoveMult;
+            else if (ew != null && ChargeT > 0.12f) m = ew.HoldIsBasic ? 0.55f : 0.7f;
             if (Carrying != null || CarryingTnt != null) m = 0.75f;
         }
 
-        partial void AttackAllowsTurningImpl(ref bool v) { v = Attack == null || Attack.Phase == AttackPhase.Recovery; }
+        partial void AttackAllowsTurningImpl(ref bool v) { v = (Attack == null || Attack.Phase == AttackPhase.Recovery) && (Special == null || !Special.Windup); }
 
         // ---- Acción principal: atacar / comer / lanzar ----
         partial void ActionButton(float dt, float? inputAngle)
@@ -60,6 +64,7 @@ namespace Delvefolk
             {
                 if (Buffer > 0f && Eating == null && Cooldown <= 0f) { Buffer = 0f; StartEating(); }
             }
+            else if (Weapon is ElementalWeapon && !Weapon.Broken) ElementalAction((ElementalWeapon)Weapon, dt, inputAngle);
             else if ((Buffer > 0f || c.AttackDown()) && Cooldown <= 0f && Attack == null) StartAttack(inputAngle);
             if (Attack != null) UpdateAttack(dt);
             if (Eating != null) UpdateEating(dt);
@@ -180,6 +185,7 @@ namespace Delvefolk
             }
             Parts.LHand.localPosition = new Vector3(0.42f, 0.8f, 0.1f);
             var w = Weapon;
+            if (Attack == null && ElementalPose(ref p)) { handled = true; return; }
             if (Eating != null) { p = w.EatPose(Eating.T); handled = true; }
             else if (Attack != null)
             {

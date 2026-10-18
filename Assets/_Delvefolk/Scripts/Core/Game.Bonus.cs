@@ -33,6 +33,7 @@ namespace Delvefolk
             if (Bonus.HandleInteraction(p)) { taken = true; return; }
             if (BossFloor != null && BossFloor.Interact != null && BossFloor.Interact(p)) { taken = true; return; }
             ShopInteraction(p, ref taken);
+            if (!taken && SlotInteraction(p)) taken = true;
         }
 
         partial void ShopInteraction(Player p, ref bool taken);

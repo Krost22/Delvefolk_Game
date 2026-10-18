@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 153336fa2091c3c498065c4d8417d302, type: 3}
+  m_Name: WeaponModels
+  m_EditorClassIdentifier: Delvefolk::Delvefolk.WeaponModelCatalog
+  Entries:
+  - Id: vacuum
+    Prefab: {fileID: 919132149155446097, guid: 3e58de40ba78a254386b9e1a97994b83, type: 3}
+    Length: 1.3
+    HandleBack: 0.35
+    FlipLength: 1
+    GripOffset: {x: 0, y: 0.05, z: 0}
+    GripEuler: {x: 0, y: 0, z: 0}
+    Scale: 1
+  - Id: hellpan
+    Prefab: {fileID: 919132149155446097, guid: 5349233e674818f4f846085b75cf13af, type: 3}
+    Length: 1.9
+    HandleBack: 0.1
+    FlipLength: 0
+    GripOffset: {x: 0, y: 0, z: 0}
+    GripEuler: {x: 0, y: 0, z: 0}
+    Scale: 1
+  - Id: parasol
+    Prefab: {fileID: 919132149155446097, guid: e6d7000ecbe83e74e9e17acf7a9d4b0f, type: 3}
+    Length: 1.9
+    HandleBack: 0.25
+    FlipLength: 1
+    GripOffset: {x: 0, y: 0, z: 0}
+    GripEuler: {x: 0, y: 0, z: 0}
+    Scale: 1
+  - Id: rake
+    Prefab: {fileID: 919132149155446097, guid: 1818f0614d292a943a51d052da177996, type: 3}
+    Length: 2.3
+    HandleBack: 0.15
+    FlipLength: 0
+    GripOffset: {x: 0, y: 0, z: 0}
+    GripEuler: {x: 0, y: 0, z: 0}
+    Scale: 1
+  - Id: mop
+    Prefab: {fileID: 0}
+    Length: 2.1
+    HandleBack: 0.12
+    FlipLength: 0
+    GripOffset: {x: 0, y: 0, z: 0}
+    GripEuler: {x: 0, y: 0, z: 0}
+    Scale: 1

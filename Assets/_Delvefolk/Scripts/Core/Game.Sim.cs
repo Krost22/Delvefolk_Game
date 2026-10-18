@@ -93,6 +93,7 @@ namespace Delvefolk
             navSources.Clear();
             foreach (var p in Players) if (p.Targetable) navSources.Add(new Vector2Int(Grid.TileX(p.X), Grid.TileZ(p.Z)));
             if (navSources.Count > 0) Dungeon.UpdateNav(navSources);
+            UpdateElemental(dt);
             UpdateWorldEntities(dt);
 
             Physics.Step(dt);

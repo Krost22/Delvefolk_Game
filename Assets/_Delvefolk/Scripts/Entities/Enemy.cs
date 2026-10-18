@@ -46,6 +46,9 @@ namespace Delvefolk
         public bool NoSwap;                // jefes y Duende: el Intercambio Caótico no los mueve
         public bool Flattened;
         public bool LastHitStomp;
+        // Armas elementales: ralentización/raíz (multiplica el movimiento) y "dentro de la aspiradora" (sin IA)
+        public float StatusMoveMult = 1f;
+        public bool Captured;
         public Player Target;
         public readonly HashSet<Player> AttackHit = new HashSet<Player>();
         protected float retarget;
@@ -135,7 +138,7 @@ namespace Delvefolk
 
         public virtual void Update(float dt)
         {
-            if (Removed) return;
+            if (Removed || Captured) return;
             UpdateFlash(dt);
             StateT += dt;
             Anim += dt;
@@ -206,7 +209,7 @@ namespace Delvefolk
             // Aceleración suave hacia la velocidad deseada
             Vx = MathUtil.Damp(Vx, mvx, 12f, dt);
             Vz = MathUtil.Damp(Vz, mvz, 12f, dt);
-            Body.Mvx = Vx; Body.Mvz = Vz;
+            Body.Mvx = Vx * StatusMoveMult; Body.Mvz = Vz * StatusMoveMult;
 
             UpdateStars(dt);
             Animate(dt);

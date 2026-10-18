@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 91b0cc3d25a5b2b42af26048d9ec4b3a, type: 3}
+  m_Name: FloorThemes
+  m_EditorClassIdentifier: Delvefolk::Delvefolk.FloorThemeCatalog
+  Themes:
+  - Element: 1
+    Name: Agua
+    Icon: "\U0001F30A"
+    Explain: "Piedra h\xFAmeda y charcos. Sale el Trapeador."
+    FloorTint: {r: 0.24705882, g: 0.62352943, b: 0.9098039, a: 1}
+    WallTint: {r: 0.22745098, g: 0.5019608, b: 0.8156863, a: 1}
+    FloorAmount: 0.88
+    WallAmount: 0.85
+    DecalA: {r: 0.22745098, g: 0.65882355, b: 1, a: 1}
+    DecalB: {r: 0.56078434, g: 0.8784314, b: 1, a: 1}
+    Glow: {r: 0.43529412, g: 0.8156863, b: 1, a: 1}
+    DecalDensity: 0.2
+    WeaponId: mop
+  - Element: 2
+    Name: Fuego
+    Icon: "\U0001F525"
+    Explain: "Piedra caliente con grietas. Sale la Sart\xE9n Infernal."
+    FloorTint: {r: 0.9411765, g: 0.34509805, b: 0.16470589, a: 1}
+    WallTint: {r: 0.72156864, g: 0.22745098, b: 0.13333334, a: 1}
+    FloorAmount: 0.88
+    WallAmount: 0.85
+    DecalA: {r: 1, g: 0.41568628, b: 0.101960786, a: 1}
+    DecalB: {r: 0.16470589, g: 0.101960786, b: 0.078431375, a: 1}
+    Glow: {r: 1, g: 0.5411765, b: 0.16470589, a: 1}
+    DecalDensity: 0.22
+    WeaponId: hellpan
+  - Element: 3
+    Name: Planta
+    Icon: "\U0001F33F"
+    Explain: Musgo y enredaderas. Sale el Rastrillo.
+    FloorTint: {r: 0.43529412, g: 0.7529412, b: 0.28235295, a: 1}
+    WallTint: {r: 0.30980393, g: 0.6039216, b: 0.22745098, a: 1}
+    FloorAmount: 0.88
+    WallAmount: 0.85
+    DecalA: {r: 0.30980393, g: 0.6039216, b: 0.19607843, a: 1}
+    DecalB: {r: 0.5411765, g: 0.41568628, b: 0.22745098, a: 1}
+    Glow: {r: 0.62352943, g: 0.827451, b: 0.41568628, a: 1}
+    DecalDensity: 0.28
+    WeaponId: rake
+  - Element: 4
+    Name: Veneno
+    Icon: "\U0001F344"
+    Explain: "Manchas t\xF3xicas y hongos. Sale el Paraguas de Esporas."
+    FloorTint: {r: 0.627451, g: 0.78431374, b: 0.21960784, a: 1}
+    WallTint: {r: 0.5019608, g: 0.28235295, b: 0.7529412, a: 1}
+    FloorAmount: 0.88
+    WallAmount: 0.85
+    DecalA: {r: 0.60784316, g: 0.8784314, b: 0.2901961, a: 1}
+    DecalB: {r: 0.65882355, g: 0.3764706, b: 0.84705883, a: 1}
+    Glow: {r: 0.72156864, g: 1, b: 0.3529412, a: 1}
+    DecalDensity: 0.22
+    WeaponId: parasol
+  - Element: 5
+    Name: Futurista
+    Icon: "\u26A1"
+    Explain: "Paneles de metal y luces. Sale la Aspiradora Cu\xE1ntica."
+    FloorTint: {r: 0.6117647, g: 0.6901961, b: 0.78431374, a: 1}
+    WallTint: {r: 0.28235295, g: 0.3529412, b: 0.45490196, a: 1}
+    FloorAmount: 0.88
+    WallAmount: 0.85
+    DecalA: {r: 0.30980393, g: 0.9411765, b: 1, a: 1}
+    DecalB: {r: 1, g: 0.2901961, b: 0.84705883, a: 1}
+    Glow: {r: 0.30980393, g: 0.9411765, b: 1, a: 1}
+    DecalDensity: 0.2
+    WeaponId: vacuum

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace Delvefolk
 {
-    public enum BarKind { None, Eat, Revive, Struggle }
+    public enum BarKind { None, Eat, Revive, Struggle, Charge }
 
     // Lo que va sobre la cabeza de cada jugador: nombre, vida (con "fantasma" y línea de armadura),
     // energía, barra de progreso (comer, reanimar, forcejeo) y avisos de interacción con las teclas.
@@ -162,7 +162,7 @@ namespace Delvefolk
             u.BarK = k;
             if (k < 0f || kind == BarKind.None) { u.BarK = -1f; u.Bar.gameObject.SetActive(false); return; }
             u.Bar.gameObject.SetActive(true);
-            u.BarFill.color = kind == BarKind.Eat ? MathUtil.Hex(0x7dff8a) : kind == BarKind.Revive ? MathUtil.Hex(0x5bb0ff) : MathUtil.Hex(0xffd36a);
+            u.BarFill.color = kind == BarKind.Eat ? MathUtil.Hex(0x7dff8a) : kind == BarKind.Revive ? MathUtil.Hex(0x5bb0ff) : kind == BarKind.Charge ? MathUtil.Hex(k >= 1f ? 0xff7ae0 : 0xd8a0ff) : MathUtil.Hex(0xffd36a);
             u.BarFill.fillAmount = Mathf.Clamp01(k);
         }
 

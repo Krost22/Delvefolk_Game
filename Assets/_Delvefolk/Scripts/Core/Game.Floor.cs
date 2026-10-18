@@ -129,6 +129,7 @@ namespace Delvefolk
             if (cause == "stomp") Ui.FloatText(e.X, 1.6f, e.Z, "¡PLAF!", TextStyle.Big);
             if (cause != "pit") SpawnCoins(e.X, e.Z, e.Cfg.Coins ?? CoinConfig.EnemyDefault);
             OnEnemyKilledExtra(e, cause);
+            OnSlotKill(e, cause);
             if (cause == "env" || cause == "pit")
             {
                 Stats.EnvKills++;
@@ -319,8 +320,12 @@ namespace Delvefolk
                 }
                 else if (nearExit)
                 {
-                    Ui.SetPrompt(p.Index, "Descender");
-                    if (c.ConsumeInteract()) Descend();
+                    if (SlotBlocksExit()) { Ui.SetPrompt(p.Index, "Antes, gira la tragaperras"); c.ConsumeInteract(); }
+                    else
+                    {
+                        Ui.SetPrompt(p.Index, "Descender");
+                        if (c.ConsumeInteract()) Descend();
+                    }
                 }
                 else Ui.SetPrompt(p.Index, null);
             }

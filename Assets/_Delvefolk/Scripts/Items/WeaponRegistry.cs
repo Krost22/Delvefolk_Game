@@ -37,6 +37,12 @@ namespace Delvefolk
             Register('\0', "axe", () => new AxeWeapon());
             Register('\0', "shotgun", () => new ShotgunWeapon());
             Register('\0', "rottencheese", () => new RottenCheeseFood());
+            // Armas elementales: salen de la tragaperras de los pisos (según la afinidad que toque)
+            Register('\0', "mop", () => new MopWeapon());
+            Register('\0', "hellpan", () => new InfernalPanWeapon());
+            Register('\0', "rake", () => new RakeWeapon());
+            Register('\0', "parasol", () => new SporeParasolWeapon());
+            Register('\0', "vacuum", () => new QuantumVacuumWeapon());
             RegisterExtra();
         }
 
@@ -44,9 +50,30 @@ namespace Delvefolk
         static void RegisterExtra() { ExtraRegistrations?.Invoke(); }
         public static Action ExtraRegistrations;
 
+        // Las armas del port web ya no salen en la partida: cada una se sustituye por un arma elemental
+        // (mapa, muebles, tienda y trofeo del Duende). Las pruebas del original las vuelven a activar.
+        public static bool LegacyWeapons;
+        public static readonly Dictionary<string, string> LegacyReplacement = new Dictionary<string, string>
+        {
+            { "broom", "mop" }, { "bucket", "mop" },
+            { "pan", "hellpan" },
+            { "stick", "rake" }, { "chairleg", "rake" },
+            { "book", "parasol" },
+            // Tienda (cuatro distintas) y trofeo del Duende Tendero
+            { "sword", "vacuum" }, { "spear", "rake" }, { "axe", "hellpan" }, { "maul", "parasol" },
+            { "shotgun", "vacuum" },
+        };
+
+        public static string Resolve(string id)
+        {
+            string r;
+            return !LegacyWeapons && id != null && LegacyReplacement.TryGetValue(id, out r) ? r : id;
+        }
+
         // state: { durability, broken } para conservar el desgaste entre pisos
         public static Weapon Create(string id, ItemState state = null)
         {
+            if (Resolve(id) != id) { id = Resolve(id); state = null; }
             Func<Weapon> f;
             var w = id != null && byId.TryGetValue(id, out f) ? f() : new FistsWeapon();
             if (state != null)

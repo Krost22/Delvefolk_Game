@@ -131,6 +131,7 @@ namespace Delvefolk
 
         public void ClearFloor()
         {
+            ClearElemental();
             ClearFloorExtra();
             foreach (var p in Players) p.Removed = true;
             Players.Clear();

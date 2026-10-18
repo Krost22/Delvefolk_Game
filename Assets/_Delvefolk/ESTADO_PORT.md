@@ -83,6 +83,53 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
 - HUD: paneles J1 arriba izq., J2 arriba dcha., J3 abajo izq., J4 abajo dcha.; los avisos usan las teclas de cada uno.
 - En pantallas y minijuegos, confirmar = atacar o saltar. Pruebas `PlayersTests` (5). Totales: EditMode 52/52, PlayMode 142/142.
 
+## Armas elementales, afinidad de piso y tragaperras (2026-10-18)
+- **Diagnóstico de "armas que se caen"**: las armas del juego no usan física de Unity (la física es `CirclePhysics`);
+  el modelo de la mano es hijo de `Modelo/Brazo/Mano` (`CharacterParts.Holder`) y sigue al brazo. Los FBX de Meshy, en
+  cambio, traen giro 270° y escala ×100, el material sin textura y, si se instancian tal cual en la escena (con
+  colisionador/Rigidbody o en espacio global), se quedan atrás o caen. Ahora siempre pasan por `Art.Spawn` (quita
+  colisionadores y Rigidbody) y cuelgan de la mano. Todos los personajes usan el mismo muñeco (`CharacterModel`), así que
+  el anclaje es único; los bípedos de `Assets/_Custom/Characters` no los usa el juego todavía.
+- **Agarre** (`Items/WeaponModels.cs`, `WeaponGrip.cs`, `Resources/WeaponModels.asset`): cada modelo se orienta solo
+  (eje largo → +Z, cara plana arriba, mango = extremo más estrecho en el origen) y se ajusta por arma en el Inspector:
+  `Length`, `HandleBack`, `FlipLength` (mango al revés), `GripOffset`, `GripEuler` (z = girar sobre el eje), `Scale`.
+  En el editor el cambio se ve al momento, también en Play. `Delvefolk/Preparar armas de Meshy` (`Editor/WeaponSetup.cs`)
+  crea los materiales URP con textura y normales (`Art/Armas`), activa Read/Write en los FBX y rellena el catálogo.
+- **Armas** (`Items/ElementalWeapons.cs`, base `ElementalWeapon`): tocar ATACAR = básico; mantener ATACAR 0,45 s y soltar =
+  especial (barra de carga sobre la cabeza, aviso en el suelo, enfriamiento en el panel del arma). Sin acciones nuevas.
+  - 🌊 `mop` Trapeador: barrido amplio con salpicadura · Torbellino: daño y empuje en círculo + suelo mojado que ralentiza.
+  - 🔥 `hellpan` Sartén Infernal: arco frontal metálico, interrumpe · Cocina volcánica: onda de calor + quemadura.
+  - 🌿 `rake` Rastrillo: barrido estrecho largo · Ven aquí, maleza: engancha y arrastra (nunca a través de muros ni a fosos);
+    ligeros inmovilizados (más tiempo en piso de planta), medianos ralentizados, pesados y jefes resisten.
+  - 🍄 `parasol` Paraguas de Esporas: golpe lento con esporas leves · Lluvia de esporas: nube de veneno (más larga en piso de veneno).
+  - 🌀 `vacuum` Aspiradora Cuántica: mantener = succión en cono con energía propia (ligeros rápido, medianos lento, pesados y
+    jefes no; capacidad 3; sin IA mientras están dentro) · tocar = Descarga: salen disparados y hacen ¡STRIKE! a otros; sin
+    nada dentro, chorro de energía. Al soltarla o cambiarla, lo de dentro sale a sus pies.
+- **Efectos** (`Combat/ElementalEffects.cs`, `Game.Elemental`): quemadura/veneno renuevan sin acumularse (tope 5 s), lentitud y
+  raíz con límites, jefes casi inmunes; zonas con vida y tope; todo se limpia al cambiar de piso. Enemigos: solo dos
+  ganchos (`StatusMoveMult` multiplica su movimiento; `Captured` = dentro de la aspiradora); su IA y modelos no cambian.
+- **Afinidad** (`World/FloorAffinity.cs`, `FloorThemeCatalog.cs`, `Resources/FloorThemes.asset`): tinte por
+  `MaterialPropertyBlock` (`_Recolor`) solo en `DungeonView.Surfaces` (suelo, muros, fosos, arcos) y en lo que lleve
+  `EnvironmentSurface`; detalles planos (charcos, grietas, musgo, hongos, paneles) en `TemaAfinidad_*`. No toca geometría,
+  luces, salida, antorchas, jugadores, armas, enemigos ni UI. `Game.SetAffinity(Element.None)` vuelve al aspecto base.
+- **Tragaperras** (`World/SlotMachine.cs`, `SlotMachineConfig.cs`, `Resources/SlotMachine.asset`): en la sala inicial de los
+  pisos normales (no bonus/tienda/jefe; por defecto desde el piso 2, 75 %), contra un muro sin tapar pasos. {E} gira una vez:
+  los tres resultados se eligen antes de la animación con pesos (negativos = 0; todo a 0 = no gira y avisa). Rodillo 1:
+  recompensa en monedas por tipo de enemigo existente (no los cambia). Rodillo 2: mejora del equipo de siempre
+  (`buff_speed`, `buff_cook`, `buff_headstrong`, `item_shield`) o curación por eliminación. Rodillo 3: afinidad del piso + su arma
+  junto a la máquina. Inspector: aparición, pisos, obligatoria, tiempos, pesos, volver a girar (apagado) y forzar resultados.
+  Usa un generador propio por piso: no altera el azar de la partida. Independiente de la ruleta del Crupier.
+- **Solo armas nuevas en la partida**: las armas del port web (escoba, sartén, cubo, palo, tomo, pata de silla, espada,
+  lanza, hacha, mazo y escopeta) ya no salen: `WeaponRegistry.Create` las sustituye (`LegacyReplacement`) en el mapa, los
+  muebles, la tienda (vacuum/rake/hellpan/parasol) y el trofeo del Duende (vacuum). Escoba y cubo → trapeador, sartén →
+  sartén infernal, palo y pata → rastrillo, tomo → paraguas. La comida sigue igual. Su código sigue dentro (sin usarse)
+  porque las pruebas del original lo comprueban con `WeaponRegistry.LegacyWeapons = true`.
+- Pruebas: `SlotMachineLogicTests` (5, EditMode) y `ElementalTests` (13, PlayMode). Las antiguas apagan la tragaperras en
+  `GameTestBase` (`Game.SlotMachinesEnabled`).
+- **Pendiente de asignar**: modelo del **trapeador** (no hay FBX; usa uno hecho por código): pon su FBX en
+  `WeaponModels.asset → mop → Prefab` y repite `Preparar armas de Meshy`. Sin sonidos ni animaciones nuevas (se reutilizan
+  los sintetizados y las poses por código). "Ataque rápido", "esquiva" y "proyectiles rebotadores" no están en la tragaperras.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el

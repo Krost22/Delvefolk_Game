@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3da8c1618438a414f9a39e69752e8f3b, type: 3}
+  m_Name: SlotMachine
+  m_EditorClassIdentifier: Delvefolk::Delvefolk.SlotMachineConfig
+  SpawnChance: 0.75
+  MinFloor: 1
+  MaxFloor: 99
+  ExcludeFirstFloor: 1
+  MaxPerFloor: 1
+  Mandatory: 0
+  ReelSpin: 1.1
+  ReelStagger: 0.45
+  RevealPause: 1.2
+  RespinEnabled: 0
+  RespinCost: 25
+  Enemies:
+  - Id: slime
+    Label: 'Recompensa: Slimes'
+    Icon: "\U0001F7E2"
+    Weight: 3
+    Explain: Los slimes sueltan +2 monedas.
+  - Id: goblin
+    Label: 'Recompensa: Goblins'
+    Icon: "\U0001F47A"
+    Weight: 3
+    Explain: Los goblins sueltan +2 monedas.
+  - Id: grabber
+    Label: 'Recompensa: Abrazones'
+    Icon: "\U0001F917"
+    Weight: 1
+    Explain: Los abrazones sueltan +5 monedas.
+  - Id: all
+    Label: 'Recompensa: Todos'
+    Icon: "\U0001F4B0"
+    Weight: 1
+    Explain: Todos los enemigos sueltan +1 moneda.
+  Abilities:
+  - Id: buff_speed
+    Label: Patas ligeras
+    Icon: "\U0001F4A8"
+    Weight: 3
+    Explain: +15 % velocidad un buen rato.
+  - Id: buff_cook
+    Label: Golpe fuerte
+    Icon: "\U0001F4AA"
+    Weight: 3
+    Explain: "+20 % da\xF1o con objetos un buen rato."
+  - Id: buff_headstrong
+    Label: Cabeza dura
+    Icon: "\U0001F915"
+    Weight: 2
+    Explain: Te recuperas antes de los aturdimientos.
+  - Id: item_shield
+    Label: Escudo
+    Icon: "\U0001F6E1\uFE0F"
+    Weight: 2
+    Explain: Bloquea por completo un impacto.
+  - Id: heal_kill
+    Label: "Curaci\xF3n por eliminaci\xF3n"
+    Icon: "\u2764\uFE0F"
+    Weight: 2
+    Explain: Cada enemigo derrotado en este piso cura 3 de vida.
+  Affinities:
+  - Id: Water
+    Label: Agua
+    Icon: "\U0001F30A"
+    Weight: 1
+    Explain: 
+  - Id: Fire
+    Label: Fuego
+    Icon: "\U0001F525"
+    Weight: 1
+    Explain: 
+  - Id: Plant
+    Label: Planta
+    Icon: "\U0001F33F"
+    Weight: 1
+    Explain: 
+  - Id: Poison
+    Label: Veneno
+    Icon: "\U0001F344"
+    Weight: 1
+    Explain: 
+  - Id: Future
+    Label: Futurista
+    Icon: "\u26A1"
+    Weight: 1
+    Explain: 
+  AffinityWeaponChance: 1
+  DebugForce: 0
+  ForceEnemies: 
+  ForceAbility: 
+  ForceAffinity: 

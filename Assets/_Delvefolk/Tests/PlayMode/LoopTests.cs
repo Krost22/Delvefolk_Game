@@ -19,6 +19,8 @@ namespace Delvefolk.Tests
             Storage.Enabled = false;
             BossConfig.DemoFinalBoss = null;   // las pruebas usan los jefes normales salvo que pidan la demo
             SoloConfig.Enabled = false;        // y los números del original (sin la dificultad del modo solo)
+            Game.SlotMachinesEnabled = false;  // sin la tragaperras de los pisos (las pruebas que la usan la encienden)
+            WeaponRegistry.LegacyWeapons = true;   // con las armas del original (las del port web)
             Loop = new GameObject("Bootstrap").AddComponent<GameLoop>();
             G.InstantTransitions = true;
         }
@@ -32,6 +34,8 @@ namespace Delvefolk.Tests
             Storage.Enabled = true;
             BossConfig.DemoFinalBoss = BossConfig.DemoBossDefault;
             SoloConfig.Enabled = true;
+            Game.SlotMachinesEnabled = true;
+            WeaponRegistry.LegacyWeapons = false;
         }
 
         protected void Step(int frames = 1) { Loop.Steps(frames); }

@@ -55,6 +55,9 @@ namespace Delvefolk
         float time, lightTimer;
         readonly DelvefolkArt art;
         readonly MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        // Superficies del entorno (suelo, muros, fosos, arcos): las que tiñe la afinidad del piso.
+        // No incluye antorchas, salida, puertas ni decoración, para que se sigan distinguiendo.
+        public readonly List<Renderer> Surfaces = new List<Renderer>();
 
         static Mesh capMesh, floorBox, wallBox, pitBottom, pitSide, flameMesh, coreMesh;
 
@@ -77,6 +80,12 @@ namespace Delvefolk
         }
 
         bool Use(GameObject p) { return Art.Has(p); }
+
+        void Surface(GameObject go)
+        {
+            if (!go) return;
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true)) if (!(r is ParticleSystemRenderer)) Surfaces.Add(r);
+        }
         GameObject Pick(GameObject[] list) { return Art.Pick(list, vr); }
 
         GameObject Spawn(GameObject prefab, Transform parent, Vector3 pos, Quaternion rot, Vector3 scale)
@@ -115,12 +124,12 @@ namespace Delvefolk
                         var p = vr.Next() < 0.04f && art.FloorsRare != null && art.FloorsRare.Length > 0 ? Pick(art.FloorsRare) : Pick(art.Floors);
                         var b = Art.LocalBounds(p);
                         float s = Cfg.Tile / Mathf.Max(0.01f, b.size.x);
-                        Spawn(p, Group, pos, Quaternion.Euler(0, 90f * (int)(vr.Next() * 4), 0), new Vector3(s, s, s));
+                        Surface(Spawn(p, Group, pos, Quaternion.Euler(0, 90f * (int)(vr.Next() * 4), 0), new Vector3(s, s, s)));
                     }
                     else fb.Add(ProcMesh.Box(Cfg.Tile, 0.3f, Cfg.Tile), pos + new Vector3(0, -0.15f, 0), new Color(v, g, v * 0.95f));
                 }
             if (!fb.Empty)
-                Obj(Group, "Suelo", fb.ToMesh("suelo"), Mats.Textured(ProcTex.FloorStones, Color.white, true), Vector3.zero);
+                Surface(Obj(Group, "Suelo", fb.ToMesh("suelo"), Mats.Textured(ProcTex.FloorStones, Color.white, true), Vector3.zero));
         }
 
         // ---------- Muros (solo los del borde) ----------
@@ -158,6 +167,7 @@ namespace Delvefolk
                         var top = Mats.Solid(0x2b2724);
                         go.GetComponent<MeshRenderer>().sharedMaterials = new[] { side, side, top, top, side, side };
                     }
+                    Surface(w.Tr.gameObject);
                     Walls.Add(w);
                     wallByTile[Key(tx, tz)] = w;
                 }
@@ -286,12 +296,13 @@ namespace Delvefolk
                         var side = Obj(Group, "ParedFoso", pitSide, sideMat, c + dir * (T / 2f) + new Vector3(0, -D / 2f, 0));
                         // La cara mira hacia el interior del foso
                         side.transform.localRotation = Quaternion.LookRotation(-dir);
+                        Surface(side);
                         bool alongX = ox == 0;
                         var rimSize = new Vector3(alongX ? T : 0.25f, 0.12f, alongX ? 0.25f : T);
                         rims.Add(ProcMesh.Box(rimSize.x, rimSize.y, rimSize.z), c + dir * (T / 2f - 0.12f) + new Vector3(0, 0.03f, 0), MathUtil.Hex(0x45403a));
                     }
                 }
-            if (!rims.Empty) Obj(Group, "Bordes", rims.ToMesh("bordesFoso"), Mats.Lit, Vector3.zero);
+            if (!rims.Empty) Surface(Obj(Group, "Bordes", rims.ToMesh("bordesFoso"), Mats.Lit, Vector3.zero));
         }
 
         // ---------- Rastrillos ----------
@@ -398,6 +409,7 @@ namespace Delvefolk
                 mb.Add(ProcMesh.Box(0.4f, 0.5f, 0.6f), Matrix4x4.TRS(new Vector3(0, H + 0.05f, 0), Quaternion.Euler(0, horiz ? 0 : 90, 0), Vector3.one), MathUtil.Hex(0x45403a));
                 Obj(g, "Piedra", mb.ToMesh("arco"), Mats.Lit, Vector3.zero);
             }
+            Surface(g.gameObject);
             AddOccluder(g, c.x, c.z, 0.15f);
         }
 

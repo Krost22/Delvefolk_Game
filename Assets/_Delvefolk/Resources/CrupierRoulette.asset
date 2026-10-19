@@ -90,8 +90,12 @@ MonoBehaviour:
   ReferenceDir: {x: 0, y: 0, z: 1}
   Clockwise: 1
   PointerAngle: 0
-  CrupierModel: {fileID: 0}
+  CrupierModel: {fileID: 919132149155446097, guid: a2716eb6184e3544b83447c62cb4a6f4, type: 3}
   CrupierHeight: 2.6
+  CrupierIdle: {fileID: 7400000, guid: 371fa1f3c09921144b13456357757cf4, type: 2}
+  CrupierWalk: {fileID: 1111703205376874628, guid: a2716eb6184e3544b83447c62cb4a6f4, type: 3}
+  CrupierRun: {fileID: 2250307845109368539, guid: a2716eb6184e3544b83447c62cb4a6f4, type: 3}
+  CrupierYaw: 0
   WheelModel: {fileID: 6591775526919551938, guid: 2a19af6618b84364bbb38936687d86f1, type: 3}
   WheelSpinnerPath: Modelo/Giro
   WheelOffset: {x: 0, y: 4.5, z: 0}

@@ -28,6 +28,16 @@ namespace Delvefolk
 
         partial void FrameStates(float dt, ref bool handled)
         {
+            // Tirada de la tragaperras en pantalla: la simulación espera (también en pausa avanza la animación)
+            if (slotUi != null && slotUi.Active)
+            {
+                slotUi.Update(dt);
+                Effects.Update(dt);
+                Ui.Update(dt);
+                Input.EndFrame();
+                handled = true;
+                return;
+            }
             if (State == GameState.Title || State == GameState.Lobby)
             {
                 if (State == GameState.Title)

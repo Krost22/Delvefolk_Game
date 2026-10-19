@@ -372,6 +372,7 @@ namespace Delvefolk
     public sealed class CrupierIllusion : Boss
     {
         CrupierLook look;
+        CrupierBody body;
         bool thrown;
 
         public CrupierIllusion(Game g, float x, float z, CrupierBoss master) : base(g, x, z, BossCfg(c =>
@@ -400,7 +401,8 @@ namespace Delvefolk
         protected override void BuildModel()
         {
             var cfg = RouletteConfig.Load();
-            bool asset = UseAnimatedModel(cfg.CrupierModel, cfg.CrupierHeight, 0, 0f);
+            body = CrupierBody.Build(Model, cfg);
+            bool asset = body != null || UseAnimatedModel(cfg.CrupierModel, cfg.CrupierHeight, 0, 0f);
             look = new CrupierLook(Model, !asset);
         }
 
@@ -409,6 +411,7 @@ namespace Delvefolk
             if (look == null) return;
             float aL = Mathf.Sin(Anim * 2.2f) * 0.25f, aR = Is("cartas") && PatternT < 0.55f ? -2.2f : -aL;
             look.Animate(dt, aL, aR, false, 0f);
+            if (body != null) { body.Speed = MathUtil.Hypot(Vx, Vz); body.SpeedRef = Cfg.Speed; body.Acting = Current != null; }
         }
 
         public override void TakeHit(Hit hit)

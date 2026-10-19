@@ -93,7 +93,7 @@ namespace Delvefolk
         void BuildModel()
         {
             // El muñeco se monta con las piezas cosméticas elegidas (mismo código que la vista previa)
-            Parts = CharacterModel.Build(Model, Loadout.Cosmetics);
+            Parts = CharacterModel.Build(Model, Loadout.Cosmetics, Loadout.Hero);
             RegisterFlash(Parts.Renderers);
             // Anillo de color del jugador (para distinguirse en cooperativo)
             var ring = new MeshBuilder().Add(ProcMesh.Ring(0.55f, 0.68f, 24).RotateX(-Mathf.PI / 2f), Vector3.zero, MathUtil.Hex(Look.Ring, 0.75f)).ToMesh("anillo");
@@ -108,6 +108,7 @@ namespace Delvefolk
             if (weaponModel) Object.Destroy(weaponModel);
             Weapon = w;
             weaponModel = w.BuildDisplayModel(Parts.Holder);
+            FitToHero();
             OnWeaponChanged();
             Cooldown = Mathf.Min(Cooldown, 0.15f);
             G.Ui.SetWeapon(Index, w);
@@ -115,11 +116,21 @@ namespace Delvefolk
 
         partial void OnWeaponChanged();
 
+        // Personaje personalizado: el puño hecho por código no se ve (ya tiene mano) y el rig sabe qué arma lleva
+        void FitToHero()
+        {
+            var rig = Parts.Rig;
+            if (rig == null) return;
+            rig.WeaponId = Weapon.Id;
+            if (weaponModel && Weapon.Id == "fists") weaponModel.SetActive(false);
+        }
+
         // Se rompió en plena pelea: el modelo pasa a la versión rota
         public void RefreshWeaponModel()
         {
             if (weaponModel) Object.Destroy(weaponModel);
             weaponModel = Weapon.BuildDisplayModel(Parts.Holder);
+            FitToHero();
             G.Ui.SetWeapon(Index, Weapon);
         }
 
@@ -493,7 +504,15 @@ namespace Delvefolk
                 p.Yaw += Mathf.Sin(WalkT) * 0.12f;
             }
             Parts.ArmPivot.localRotation = ProcMesh.EulerYXZ(p.Pitch, p.Yaw, p.Roll);
-            Parts.Holder.localPosition = new Vector3(0f, 0f, 0.45f + p.Reach);
+            var rig = Parts.Rig;
+            if (rig != null)
+            {
+                // Personaje con esqueleto: su animación de correr y el brazo del arma con IK (HeroRig)
+                rig.Moving = moveRatio;
+                rig.Reach = p.Reach;
+                rig.ArmActive = handled || Weapon.Id != "fists";
+            }
+            else Parts.Holder.localPosition = new Vector3(0f, 0f, 0.45f + p.Reach);
             // Parpadeo de invulnerabilidad
             bool vis = Iframes <= 0f || Mathf.FloorToInt(Iframes * 14f) % 2 == 0;
             if (Model.gameObject.activeSelf != vis) Model.gameObject.SetActive(vis);

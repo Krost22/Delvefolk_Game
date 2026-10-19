@@ -14,6 +14,8 @@ namespace Delvefolk
         FloorThemeApplier theme;
         public FloorThemeApplier Theme { get { return theme ?? (theme = new FloorThemeApplier(this)); } }
         public readonly List<SlotMachine> SlotMachines = new List<SlotMachine>();
+        SlotOverlay slotUi;
+        public SlotOverlay SlotUi { get { return slotUi ?? (slotUi = new SlotOverlay(this)); } }
 
         // Afinidad del piso actual (la decide la tragaperras; None = aspecto de siempre)
         public Element Affinity { get; private set; }
@@ -36,6 +38,7 @@ namespace Delvefolk
         // Al vaciar el piso: estados, zonas, enemigos almacenados, máquinas y afinidad no pasan al siguiente
         void ClearElemental()
         {
+            SlotUi.Abort();
             Elemental.Clear();
             Theme.Clear();
             foreach (var m in SlotMachines) m.Destroy();

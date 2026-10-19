@@ -59,12 +59,12 @@ namespace Delvefolk
             Key.intensity = 0.9f * Lighting.DirScale;
             Key.shadows = LightShadows.None;
             Key.enabled = false;
-            // Cámara: FOV 30 desde (0, 3.2, 7.2) mirando a (0, 0.9, 0); fondo transparente
+            // Cámara: FOV 30 desde (0, 2.3, 4.8) mirando a (0, 0.95, 0) (cerca: el modelo es lo principal de la ficha)
             Texture = new RenderTexture(width, height, 24, RenderTextureFormat.ARGB32) { name = "vistaPrevia" + (slot + 1), antiAliasing = 4 };
             var cg = new GameObject("CamaraVista");
             cg.transform.SetParent(stage, false);
-            cg.transform.localPosition = new Vector3(0f, 3.2f, 7.2f);
-            cg.transform.LookAt(stage.TransformPoint(new Vector3(0f, 0.9f, 0f)));
+            cg.transform.localPosition = new Vector3(0f, 2.3f, 4.8f);
+            cg.transform.LookAt(stage.TransformPoint(new Vector3(0f, 0.95f, 0f)));
             cam = cg.AddComponent<Camera>();
             cam.fieldOfView = 30f;
             cam.nearClipPlane = 0.1f;
@@ -87,19 +87,21 @@ namespace Delvefolk
         public void SetActive(bool on) { if (cam) cam.enabled = on; }
 
         // look: aspecto del jugador (color del anillo); cosmetics: selección; abilityId: habilidad a demostrar
-        public void Set(PlayerLook look, Dictionary<string, string> cosmetics, string abilityId)
+        public void Set(PlayerLook look, Dictionary<string, string> cosmetics, string abilityId, string hero = null)
         {
             ability = Abilities.Get(abilityId);
             var c = MathUtil.Hex(look.Ring).linear;
             mpb.SetVector(Mats.BaseColorId, new Vector4(c.r, c.g, c.b, 0.75f));
             ringR.SetPropertyBlock(mpb);
-            string key = KeyOf(cosmetics);
+            string key = KeyOf(cosmetics) + (hero ?? HeroCatalog.Classic);
             if (key == shownKey) return;
             shownKey = key;
             if (model) Object.Destroy(model.gameObject);
             model = new GameObject("Modelo").transform;
             model.SetParent(root, false);
-            parts = CharacterModel.Build(model, cosmetics);
+            parts = CharacterModel.Build(model, cosmetics, hero);
+            // Los personajes son más altos que el clásico: la vista previa los encuadra a su altura
+            if (parts.Rig != null) model.localScale = Vector3.one * (1.85f / HeroCatalog.Height);
             SetLayer(model, Layer);
             fxT = 0.6f;
         }

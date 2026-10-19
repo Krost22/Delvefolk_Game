@@ -375,6 +375,43 @@ namespace Delvefolk.Tests
         }
 
         [UnityTest]
+        public IEnumerator Tragaperras_SeVeEnPantallaAunqueSePauseYDevuelveElControl()
+        {
+            var cfg = TestConfig();
+            SlotMachineConfig.Override = cfg;
+            Game.SlotMachinesEnabled = true;
+            try
+            {
+                StartRun(1);
+                G.LoadFloor(2, G.CollectCarry());
+                Step(2);
+                var m = G.SlotMachines[0];
+                var p = G.Players[0];
+                Assert.IsTrue(m.Spin(p));
+                Assert.IsTrue(G.SlotUi.Active && G.Ui.SlotShown, "el panel de los rodillos está en pantalla");
+                Assert.IsFalse(m.Spin(p), "no se puede tirar otra vez durante la animación");
+                float t0 = G.Time;
+                Step(10);
+                Assert.AreEqual(t0, G.Time, "la simulación espera mientras giran los rodillos");
+                Press("Escape"); Step(1);
+                Assert.AreEqual(GameState.Paused, G.State);
+                Step(120);
+                Assert.IsFalse(G.SlotUi.Active, "en pausa la animación también termina");
+                Assert.IsFalse(G.Ui.SlotShown);
+                Assert.IsTrue(m.Applied, "resultado aplicado");
+                Assert.AreEqual(m.AffinityResult.Id, G.Affinity.ToString(), "lo que se ve es lo que se aplica");
+                Press("Escape"); Step(1);
+                Assert.AreEqual(GameState.Play, G.State);
+                float x = p.X;
+                G.Input.Tap("KeyD"); Step(20); G.Input.Release("KeyD");
+                Assert.AreNotEqual(x, p.X, "el jugador vuelve a moverse");
+                Assert.AreEqual(1, G.SlotUi.Opened, "una sola tirada");
+            }
+            finally { SlotMachineConfig.Override = null; }
+            yield break;
+        }
+
+        [UnityTest]
         public IEnumerator Tragaperras_ConTodosLosPesosACeroNoGira()
         {
             var cfg = TestConfig();

@@ -10,6 +10,8 @@ namespace Delvefolk
         public MeshRenderer StarsRenderer, ShellRenderer;
         public CosmeticFx Fx;
         public readonly List<Renderer> Renderers = new List<Renderer>();
+        // Personaje personalizado: su esqueleto (null en el aventurero clásico)
+        public HeroRig Rig;
     }
 
     // Modelo del aventurero (CharacterModel.build): lo usan el jugador en partida y la vista previa de la sala.
@@ -30,9 +32,25 @@ namespace Delvefolk
             return go;
         }
 
-        public static CharacterParts Build(Transform model, Dictionary<string, string> cosmetics)
+        // hero: id de Resources/Heroes (null o "classic" = el aventurero hecho por código)
+        public static CharacterParts Build(Transform model, Dictionary<string, string> cosmetics, string hero = null)
         {
             var cos = cosmetics ?? Cosmetics.Defaults(0);
+            var he = HeroCatalog.Get(hero);
+            if (he != null)
+            {
+                var hp = HeroModel.Build(model, he);
+                if (hp != null)
+                {
+                    AddCommon(model, hp, cos);
+                    // Estrellas de aturdimiento y caparazón a la altura del personaje
+                    float h = HeroCatalog.Height;
+                    hp.Stars.localPosition = new Vector3(0f, h + 0.3f, 0f);
+                    hp.Shell.localPosition = new Vector3(0f, h * 0.5f, 0f);
+                    hp.Shell.localScale = Vector3.one * (h / 1.85f);
+                    return hp;
+                }
+            }
             var palette = Cosmetics.Get(Get(cos, "palette")) ?? Cosmetics.Get("moss");
             var matDef = Cosmetics.Get(Get(cos, "material")) ?? Cosmetics.Get("cloth");
             var b = new MeshBuilder();
@@ -91,6 +109,13 @@ namespace Delvefolk
             parts.Renderers.Add(rh.GetComponent<MeshRenderer>());
             parts.ArmPivot = arm; parts.Holder = holder;
 
+            AddCommon(model, parts, cos);
+            return parts;
+        }
+
+        // Lo que comparten el aventurero clásico y los personajes personalizados
+        static void AddCommon(Transform model, CharacterParts parts, Dictionary<string, string> cos)
+        {
             // Equipo de JUEGO (armadura ganada): grupo aparte, nunca mezclado con los cosméticos
             parts.Armor = new GameObject("Armadura").transform;
             parts.Armor.SetParent(model, false);
@@ -116,7 +141,8 @@ namespace Delvefolk
 
             var fxDef = Cosmetics.Get(Get(cos, "fx"));
             parts.Fx = fxDef != null ? fxDef.Fx : null;
-            return parts;
+            // Las piezas de armadura están hechas a la medida del aventurero clásico
+            if (parts.Rig != null) parts.Armor.gameObject.SetActive(false);
         }
 
         static string Get(Dictionary<string, string> d, string k) { string v; return d.TryGetValue(k, out v) ? v : null; }

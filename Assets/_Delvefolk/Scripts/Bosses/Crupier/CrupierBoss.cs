@@ -15,6 +15,7 @@ namespace Delvefolk
         public readonly RouletteController Roulette;
         public readonly CasinoFloor Casino;
         public CrupierLook Look;
+        public CrupierBody Figure;   // modelo con esqueleto (solo visual); null con el placeholder
         public float ShieldHp, ShieldMax, ShieldT;
         public CrupierIllusion Illusion;
         public CrupierPrize Prize;          // lluvia de monedas y ruleta del premio tras vencerle
@@ -223,8 +224,9 @@ namespace Delvefolk
         protected override void BuildModel()
         {
             var cfg = RouletteConfig.Load();
-            bool asset = UseAnimatedModel(cfg.CrupierModel, cfg.CrupierHeight, 0, 0f);
-            Look = new CrupierLook(Model, !asset);
+            Figure = CrupierBody.Build(Model, cfg);
+            bool asset = Figure != null || UseAnimatedModel(cfg.CrupierModel, cfg.CrupierHeight, 0, 0f);
+            Look = new CrupierLook(Model, !asset);   // con modelo: solo la burbuja del escudo
         }
 
         protected override void Animate(float dt)
@@ -241,6 +243,7 @@ namespace Delvefolk
             else if (Is("rastrillo")) aR = PatternT < 0.6f ? -1.6f * (PatternT / 0.6f) : -1.6f + 2.6f * Mathf.Clamp01((PatternT - 0.6f) / 0.2f);
             else if (Is("cartas")) aR = PatternT < 0.55f ? -2.2f : -0.4f;
             Look.Animate(dt, aL, aR, Shielded, ShieldHp / Mathf.Max(1f, ShieldMax));
+            if (Figure != null) { Figure.Speed = MathUtil.Hypot(Vx, Vz); Figure.SpeedRef = Cfg.Speed; Figure.Acting = Current != null; }
         }
 
         public override void Die(string cause)

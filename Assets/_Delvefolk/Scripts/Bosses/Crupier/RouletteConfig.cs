@@ -49,6 +49,10 @@ namespace Delvefolk
         [Header("Modelos (vacío = placeholder hecho por código)")]
         public GameObject CrupierModel;
         public float CrupierHeight = 2.6f;
+        [Tooltip("Con esqueleto (FBX Generic): reposo, andar y correr. Sin Idle se usa el camino antiguo (Animator con estados)")]
+        public AnimationClip CrupierIdle;
+        public AnimationClip CrupierWalk, CrupierRun;
+        [Tooltip("Giro del modelo (grados) para que mire hacia +Z")] public float CrupierYaw;
         public GameObject WheelModel;
         [Tooltip("Ruta del hijo que gira dentro de WheelModel (vacío = el propio modelo)")] public string WheelSpinnerPath = "";
         [Tooltip("Posición de la rueda respecto al Crupier")] public Vector3 WheelOffset = new Vector3(0f, 4.5f, 0f);

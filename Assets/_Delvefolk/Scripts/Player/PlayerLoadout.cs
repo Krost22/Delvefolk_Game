@@ -9,11 +9,12 @@ namespace Delvefolk
         public readonly int Index;
         public string Ability;
         public Dictionary<string, string> Cosmetics;
+        public string Hero;   // personaje (Resources/Heroes); su habilidad pasa a ser la del jugador
 
         [System.Serializable]
         sealed class Saved
         {
-            public string ability;
+            public string ability, hero;
             public string head, body, acc, palette, material, fx;
         }
 
@@ -25,9 +26,21 @@ namespace Delvefolk
             Index = index;
             Ability = Abilities.Get(ability) != null ? ability : DefaultAbility(index);
             Cosmetics = Delvefolk.Cosmetics.Validate(cosmetics, index, null);
+            SetHero(HeroCatalog.DefaultFor(index));
         }
 
         public static string DefaultAbility(int index) { return Abilities.DefaultFor(index); }
+
+        // Personaje: uno del catálogo (lo desconocido vuelve al de por defecto del hueco). Con personaje, la habilidad
+        // es la suya (la que enseña su ficha en la sala)
+        public bool SetHero(string id)
+        {
+            bool ok = HeroCatalog.Get(id) != null || (id == HeroCatalog.Classic && HeroCatalog.ClassicAllowed);
+            Hero = ok ? id : HeroCatalog.DefaultFor(Index);
+            var ab = HeroCatalog.AbilityOf(Hero);
+            if (ab != null) Ability = ab;
+            return ok;
+        }
 
         // Una sola habilidad equipada: elegir otra sustituye a la anterior
         public bool SetAbility(string id)
@@ -55,13 +68,15 @@ namespace Delvefolk
             {
                 { "head", s.head }, { "body", s.body }, { "acc", s.acc }, { "palette", s.palette }, { "material", s.material }, { "fx", s.fx },
             };
-            return new PlayerLoadout(index, s.ability, sel);
+            var lo = new PlayerLoadout(index, s.ability, sel);
+            lo.SetHero(s.hero);
+            return lo;
         }
 
         public void Save()
         {
             string v;
-            var s = new Saved { ability = Ability };
+            var s = new Saved { ability = Ability, hero = Hero };
             if (Cosmetics.TryGetValue("head", out v)) s.head = v;
             if (Cosmetics.TryGetValue("body", out v)) s.body = v;
             if (Cosmetics.TryGetValue("acc", out v)) s.acc = v;

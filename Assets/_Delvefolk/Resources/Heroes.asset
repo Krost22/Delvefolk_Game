@@ -1,0 +1,160 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 565f4cc0d6e433d4f82948de98aa7108, type: 3}
+  m_Name: Heroes
+  m_EditorClassIdentifier: Delvefolk::Delvefolk.HeroCatalog
+  TargetHeight: 2.3
+  Heroes:
+  - Id: blossom_elf_maiden
+    Name: "Doncella \xC9lfica"
+    Icon: "\U0001F338"
+    Prefab: {fileID: 919132149155446097, guid: e0df4e66d531f3440917798aed75648c, type: 3}
+    Ability: guard
+    Run: {fileID: 2486903011823615190, guid: e0df4e66d531f3440917798aed75648c, type: 3}
+    Idle: {fileID: 7400000, guid: 1e94806ca011a3b4cb17c49492f49e64, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: crimson_elven_rogue
+    Name: "P\xEDcara Carmes\xED"
+    Icon: "\U0001F5E1\uFE0F"
+    Prefab: {fileID: 919132149155446097, guid: faf44a81feac9934f87a395578eb2da6, type: 3}
+    Ability: charge
+    Run: {fileID: 2486903011823615190, guid: faf44a81feac9934f87a395578eb2da6, type: 3}
+    Idle: {fileID: 7400000, guid: 2f85648dbec09514fb52ff065e4cf904, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: low_poly_pink_elf_gir
+    Name: Elfa Rosa
+    Icon: "\U0001F380"
+    Prefab: {fileID: 919132149155446097, guid: f59ba2b2511056f41af5b2b7cd33a5e5, type: 3}
+    Ability: shout
+    Run: {fileID: 2486903011823615190, guid: f59ba2b2511056f41af5b2b7cd33a5e5, type: 3}
+    Idle: {fileID: 7400000, guid: 4f9c1195952b301489eb1a222ba630dc, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: rosewind_rogue
+    Name: "P\xEDcara Rosaviento"
+    Icon: "\U0001F339"
+    Prefab: {fileID: 919132149155446097, guid: a111d011f3c38284ea1c1864a79d0f80, type: 3}
+    Ability: charge
+    Run: {fileID: 2486903011823615190, guid: a111d011f3c38284ea1c1864a79d0f80, type: 3}
+    Idle: {fileID: 0}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: azure_wayfarer
+    Name: Viajero Azur
+    Icon: "\U0001F9ED"
+    Prefab: {fileID: 919132149155446097, guid: db0448bd0ec684545b1daf132249bb66, type: 3}
+    Ability: quake
+    Run: {fileID: 2486903011823615190, guid: db0448bd0ec684545b1daf132249bb66, type: 3}
+    Idle: {fileID: 2486903011823615190, guid: 08d9825db28b1f6488360be3e3823fdc, type: 3}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: crimson_shadow_rogue
+    Name: "Sombra Carmes\xED"
+    Icon: "\U0001F977"
+    Prefab: {fileID: 919132149155446097, guid: 3fad5899c1058f44c9cb3ea7c6464b1f, type: 3}
+    Ability: swap
+    Run: {fileID: 2486903011823615190, guid: 3fad5899c1058f44c9cb3ea7c6464b1f, type: 3}
+    Idle: {fileID: 7400000, guid: 2c4c0a03acc9381439fd1a5983816326, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: embercloak_alchemist
+    Name: Alquimista de Ascuas
+    Icon: "\U0001F9EA"
+    Prefab: {fileID: 919132149155446097, guid: b19333ea6ce4ed04dbaf3fc3eb1c5c40, type: 3}
+    Ability: blast
+    Run: {fileID: 2486903011823615190, guid: b19333ea6ce4ed04dbaf3fc3eb1c5c40, type: 3}
+    Idle: {fileID: 7400000, guid: d90947cb6880e3341a752f7f80262628, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []
+  - Id: feathered_outlaw
+    Name: Forajido Emplumado
+    Icon: "\U0001FAB6"
+    Prefab: {fileID: 919132149155446097, guid: 739844f079ccd5c408fa054787a0a5e5, type: 3}
+    Ability: magnet
+    Run: {fileID: 2486903011823615190, guid: 739844f079ccd5c408fa054787a0a5e5, type: 3}
+    Idle: {fileID: 7400000, guid: dc9a3565524039240b6710c4aef36d05, type: 2}
+    RunSpeedRef: 6.4
+    Scale: 1
+    Yaw: 0
+    Hand: 0
+    UpperArmBone: mixamorig:RightArm
+    ForeArmBone: mixamorig:RightForeArm
+    HandBone: mixamorig:RightHand
+    SocketOffset: {x: 0, y: 0, z: 0.04}
+    SocketEuler: {x: 0, y: 0, z: 0}
+    SocketScale: 1
+    WeaponOffsets: []

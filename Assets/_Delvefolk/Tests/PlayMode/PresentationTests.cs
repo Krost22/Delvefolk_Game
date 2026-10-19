@@ -57,28 +57,30 @@ namespace Delvefolk.Tests
         {
             UseTestStorage();
             G.Settings = new MatchSettings(); G.Settings.Save();
-            G.Loadouts[0].SetAbility("quake"); G.Loadouts[0].Save();
-            G.Loadouts[1].SetAbility("blast"); G.Loadouts[1].Save();
+            // La habilidad va con el personaje: J1 Sombra Carmesí (intercambio), J2 Alquimista (explosión)
+            G.Loadouts[0].SetHero("crimson_shadow_rogue"); G.Loadouts[0].Save();
+            G.Loadouts[1].SetHero("embercloak_alchemist"); G.Loadouts[1].Save();
             G.State = GameState.Title; G.OpenLobby(1);
             var L = G.Lobby;
             Assert.IsTrue(L.Joined(0) && !L.Joined(1), "empieza solo J1");
             Tap("Enter");
             Assert.IsTrue(L.Joined(1), "J2 se une con ENTER");
-            // J1 activa el modo exclusivo y avanza su habilidad: 'blast' está cogida por J2 → salta a 'charge'
+            // J1 activa el modo exclusivo y avanza: el Alquimista (explosión, de J2) se salta → Forajido (imán)
             Tap("KeyV");
             Assert.IsTrue(G.Settings.ExclusiveAbilities, "modo exclusivo activado");
             Tap("KeyD");
-            Assert.AreEqual("charge", G.Loadouts[0].Ability, "J1 salta la habilidad ocupada");
-            // J2 intenta ponerse 'charge' (ocupada por J1) → salta a 'shout'
+            Assert.AreEqual("feathered_outlaw", G.Loadouts[0].Hero, "J1 salta el personaje de habilidad ocupada");
+            Assert.AreEqual("magnet", G.Loadouts[0].Ability);
+            // J2 avanza: el Forajido (imán, de J1) se salta → Doncella Élfica (último recurso)
             Tap("ArrowRight");
-            Assert.AreEqual("shout", G.Loadouts[1].Ability, "J2 salta la habilidad ocupada");
+            Assert.AreEqual("guard", G.Loadouts[1].Ability, "J2 salta la habilidad ocupada");
             // J2 sale: su hueco se libera y no cuenta
             Tap("ShiftRight");
             Assert.IsFalse(L.Joined(1), "J2 sale de la sala");
             Tap("KeyV");
             Assert.IsFalse(G.Settings.ExclusiveAbilities, "modo exclusivo desactivado");
             Tap("Enter");
-            Assert.AreEqual("shout", G.Loadouts[1].Ability, "al volver recupera su elección guardada");
+            Assert.AreEqual("guard", G.Loadouts[1].Ability, "al volver recupera su elección guardada");
             Tap("KeyX");
             Assert.IsFalse(L.AllReady(), "falta J2");
             Assert.IsFalse(L.StartEnabled);
@@ -88,7 +90,8 @@ namespace Delvefolk.Tests
             Step(200);
             Assert.AreEqual(GameState.Play, G.State, "la cuenta atrás inicia la partida");
             Assert.AreEqual(2, G.Players.Count);
-            Assert.AreEqual("charge,shout", string.Join(",", G.Players.Select(p => p.Ability.Id)), "cada jugador lleva su habilidad");
+            Assert.AreEqual("magnet,guard", string.Join(",", G.Players.Select(p => p.Ability.Id)), "cada jugador lleva la habilidad de su personaje");
+            Assert.AreEqual("feathered_outlaw", G.Players[0].Parts.Rig.Entry.Id, "y entra con el personaje elegido");
             Assert.IsTrue(G.Ui.HudShown);
             Assert.IsFalse(L.IsOpen);
             yield break;
@@ -148,15 +151,15 @@ namespace Delvefolk.Tests
             Step(2);
             Assert.IsTrue(pv.Active, "la cámara de la vista previa pinta");
             StringAssert.StartsWith("pot|", pv.ModelKey);
-            // Fila de la cabeza y siguiente pieza
-            Tap("KeyS");
-            Assert.AreEqual(1, G.Lobby.Row(0));
-            string before = G.Loadouts[0].Cosmetics["head"];
+            // La ficha solo tiene el personaje (y "listo"): cambiar de personaje cambia el modelo y su habilidad
+            Assert.AreEqual(0, G.Lobby.Row(0));
+            string before = G.Loadouts[0].Hero;
             Tap("KeyD");
-            string after = G.Loadouts[0].Cosmetics["head"];
+            string after = G.Loadouts[0].Hero;
             Assert.AreNotEqual(before, after);
+            Assert.AreEqual(HeroCatalog.AbilityOf(after), G.Loadouts[0].Ability, "la habilidad es la del personaje");
             Step(1);
-            StringAssert.StartsWith(after + "|", pv.ModelKey, "el muñeco cambia con la selección");
+            StringAssert.EndsWith("|" + after, pv.ModelKey, "el modelo cambia con la selección");
             Step(200);
             Assert.GreaterOrEqual(pv.Demos, 2, "demostración del efecto cada 2.4 s");
             Tap("Escape");

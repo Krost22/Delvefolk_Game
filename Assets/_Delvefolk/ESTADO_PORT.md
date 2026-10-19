@@ -130,6 +130,80 @@ El juego es jugable de principio a fin: título → lobby → pisos → bonus �
   `WeaponModels.asset → mop → Prefab` y repite `Preparar armas de Meshy`. Sin sonidos ni animaciones nuevas (se reutilizan
   los sintetizados y las poses por código). "Ataque rápido", "esquiva" y "proyectiles rebotadores" no están en la tragaperras.
 
+## Personajes personalizados (2026-10-18)
+- **Modelos**: 8 personajes de Meshy en `Assets/_Custom/Characters/*/..._biped` (los `*_texture_fbx` son la misma figura sin
+  esqueleto y no se usan). Todos con rig **Generic** y Avatar propio ("Create From This Model"): esqueleto Mixamo
+  (`mixamorig:*`) pero distinto en cada uno (54–93 huesos, dedos diferentes). Solo traen la animación de **correr** (0,67 s,
+  en el sitio); se ha puesto en bucle. Cada FBX trae además una esfera suelta ("Icosphere") que se oculta al instanciar.
+- `Delvefolk/Preparar personajes de Meshy` (`Editor/HeroSetup.cs`): material URP con textura y normales (`Art/Personajes`),
+  Generic + Avatar, bucle del clip y `Resources/Heroes.asset` (rellena los huesos del brazo y la mano de cada esqueleto,
+  comprobándolos). Repetible: conserva los ajustes.
+- **Selección**: nueva fila **Personaje** en la sala (tras Habilidad): Aventurero clásico + los 8. Se guarda con el resto de
+  la elección (`PlayerLoadout.Hero`) y la vista previa monta el personaje. Las habilidades no cambian (son independientes); los
+  cosméticos solo se aplican al clásico y la armadura de recompensa no se dibuja sobre los personajes (está hecha a su medida).
+- **Esqueleto en partida** (`Player/HeroModel.cs`, `HeroRig.cs`, `HeroCatalog.cs`): `CharacterModel.Build(model, cosméticos, hero)`
+  devuelve las mismas `CharacterParts`. `HeroRig` (LateUpdate): reproduce el correr según la velocidad (quieto: el fotograma
+  más neutro), y después coloca el brazo del arma con **IK de dos huesos** hacia la pose del juego (`ArmPivot`), así los
+  ataques y especiales usan las mismas poses que el clásico. El **socket** (`SocketArma`) es hijo del hueso de la mano
+  (`mixamorig:RightHand` en los 8) y el arma cuelga de él; los huesos se resuelven una vez al montar (error claro si faltan).
+- **Ajustes en el Inspector** (`Resources/Heroes.asset`, por personaje): `Hand` (derecha/izquierda: la izquierda refleja la
+  pose), `UpperArmBone`/`ForeArmBone`/`HandBone`, `SocketOffset`/`SocketEuler`/`SocketScale`, `WeaponOffsets` (ajuste por arma),
+  `Scale`, `Yaw` y `RunSpeedRef`. Se suma al agarre general de cada arma (`WeaponModels.asset`).
+- Pruebas `HeroTests` (4): catálogo/Avatar/clip, cada personaje con cada arma (socket en su mano, sin física, corre y ataca
+  sin soltarla), cambiar de piso sin duplicados y la fila de la sala. `PresentationTests` adaptada a la nueva fila.
+  Totales: EditMode 58/58, PlayMode 159/159.
+- **Pendiente**: animaciones de reposo, ataque, golpe y muerte para los personajes (solo hay correr; los ataques se hacen con
+  el brazo por IK y el reposo es un fotograma del correr). Revisar a ojo el agarre de cada combinación personaje/arma
+  y retocar `WeaponOffsets` si alguna no convence.
+
+## Escala, selección, tragaperras en pantalla e Idle (2026-10-18)
+- **Escala**: los FBX de Meshy vienen en metros reales (1,63–1,88 m, cada uno distinto) y se ponían 1:1 en un mundo de
+  casillas de 2 u y figuras rechonchas vistas desde lejos: se veían pequeños y desiguales. Ahora `HeroModel` mide la malla
+  (horneada en la pose de reposo, una vez por modelo) y la lleva a `HeroCatalog.TargetHeight` = **2,3** (un único valor, en
+  `Resources/Heroes.asset`; `HeroEntry.Scale` queda como ajuste fino a 1). Pies a ras de suelo, estrellas y caparazón a su
+  altura. La colisión (círculo de radio 0,42) no cambia. Medido: los 8 miden 2,30.
+- **Selección**: la sala solo ofrece los 8 personajes personalizados (el clásico solo existe para las pruebas antiguas:
+  `HeroCatalog.ClassicAllowed`). Cada hueco enseña solo **modelo** (vista previa más grande y cercana), **nombre** (◀ ▶) y
+  **habilidad** (icono, nombre y una línea), más «Listo». La habilidad es la del personaje (`HeroEntry.Ability`: Azur
+  terremoto, Alquimista explosión, Forajido imán, Sombra intercambio, Rosaviento y Pícara Carmesí carga, Elfa Rosa grito,
+  Doncella último recurso); en modo exclusivo se saltan los personajes de habilidad ocupada. Cada jugador empieza con uno distinto.
+- **Tragaperras en pantalla** (`World/SlotOverlay.cs`, `UI/HudSlot.cs`): al girar se abre un panel con los tres rodillos
+  (Enemigos, Habilidad, Afinidad) que giran y frenan con *ease-out* hasta caer en el resultado ya elegido (no se vuelve a
+  sortear). Mientras, la simulación espera (como las presentaciones de bonus); la animación avanza también en pausa. Al
+  pararse se aplican los resultados (una vez) y se explican; se cierra sola (`RevealPause`) o al confirmar. Una sola tirada a
+  la vez; el cierre (con `try/finally`) siempre oculta el panel y limpia la entrada. El juego no usa `Time.timeScale`.
+- **Idle**: `Male/Meshy_AI_Azure_Wayfarer_biped/Meshy_AI_Azure_Wayfarer_biped_Animation_Idle_11_frame_rate_30.fbx`, clip
+  "target_character|…" de 1,87 s, rig Generic, en un FBX aparte (trae su malla). Puesto en bucle. El Viajero Azur lo usa tal
+  cual. `Delvefolk/Integrar Idle en los personajes` (`Editor/HeroSetup.cs`) hornea para los demás una copia por esqueleto
+  (`Art/Personajes/Idle_<id>.anim`): misma rotación relativa a la pose de la **piel** (bindposes; la pose por defecto de los
+  FBX de Meshy es un fotograma cualquiera) y altura de cadera proporcional; nunca copia posiciones ni escalas de otros
+  huesos. Se valida comparando brazos, piernas, columna y cabeza fotograma a fotograma (media ≤ 20°, pico ≤ 30°).
+  Compatibles: Doncella Élfica, Pícara Carmesí, Elfa Rosa, Sombra Carmesí, Alquimista de Ascuas, Forajido Emplumado (+ Azur).
+  **Incompatible: Pícara Rosaviento** (pico de 41°: un brazo quedaba en cruz) → sigue con su fotograma neutro del correr.
+  `HeroRig` mezcla reposo ↔ correr con un `AnimationMixerPlayable` según la velocidad (no había Animator Controller: el
+  juego anima por código; no se crean controladores).
+- Pruebas: `HeroTests` (+Escala, +Idle), `ElementalTests` (+tragaperras con pausa), `PresentationTests` y
+  `PresentationLogicTests` adaptadas. Totales: EditMode 59/59, PlayMode 162/162.
+
+## Nuevo modelo de El Crupier (2026-10-18)
+- **Modelo**: `Assets/_Custom/jefeModelo/Meshy_AI_Crimson_Aristocrat_biped/Meshy_AI_Crimson_Aristocrat_biped_Animation_all_frame_rate_30.fbx`
+  (el `*_texture_fbx` es la misma malla sin esqueleto). Rig Generic, 66 huesos Mixamo, 1,62 m, clips **Walking** (0,83 s) y
+  **Running** (0,67 s); **sin Idle**. Traía la misma esfera suelta que los personajes (se oculta).
+- `Delvefolk/Preparar modelo del Crupier` (`Editor/BossModelSetup.cs`): material URP con su textura
+  (`Art/JefeFinal/Crupier_Crimson_Aristocrat.mat`), Generic + Avatar propio, clips con nombre y en bucle, **crea el Idle**
+  (`Art/JefeFinal/Crupier_Idle.anim`, 3,2 s en bucle para su esqueleto: pose de pie = pose de la piel con los brazos bajados,
+  respiración, leve vaivén de cadera, cabeza que mira a los lados y hombros/brazos que se mecen; giro máx. 5,7°, cadera
+  ±0,6 cm; se comprueba antes de guardarlo) y lo asigna en `Resources/CrupierRoulette.asset` (`CrupierModel`, `CrupierIdle`,
+  `CrupierWalk`, `CrupierRun`; `CrupierHeight` 2,6 sin cambiar). **Revertir**: vaciar `CrupierModel` (vuelve el placeholder).
+- **Solo visual** (`Bosses/Crupier/CrupierBody.cs`): cuelga del `Modelo` del jefe (la raíz, el círculo de colisión, la IA,
+  los patrones, el daño y los puntos de salida de cartas/fichas/rastrillo no se tocan). Mezcla reposo ↔ andar ↔ correr con
+  Playables según la velocidad que ya tenía el jefe; sin root motion. Durante los ataques sigue con su animación de base
+  (no hay clips de ataque): el reposo no interrumpe nada y los avisos de siempre (suelo, ruleta) siguen. La ilusión
+  (Morado) usa el mismo cuerpo. Se probó un gesto de brazos copiado del placeholder y se quitó (en este rig parecía una T).
+- Pruebas `CrupierModelTests` (2): modelo nuevo visible y firma de combate (radio, masa, vida, velocidad, daño, patrones)
+  idéntica a la del placeholder; reposo/andar/reposo sin desplazar la raíz, altura y pies en el suelo. `CrupierTests` (14)
+  siguen en verde con el modelo. Totales: EditMode 59/59, PlayMode 164/164.
+
 ## Pendiente
 - **Fase 9** (pulido, rendimiento, build): la hace el usuario a mano.
 - Detalles visuales menores conocidos: el rótulo 😋 de la viñeta 4 del banquete queda fuera de cuadro (igual en el

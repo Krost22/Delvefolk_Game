@@ -16,9 +16,11 @@ namespace Delvefolk
     {
         const float Px = Hud.Px;
         const int N = ControlSchemes.MaxPlayers;
-        const float SlotW = 330f, SlotH = 440f, Gap = 12f, RowH = 20f;
-        static readonly string[] RowIds = { "ability", "head", "body", "acc", "palette", "material", "fx", "ready" };
-        static readonly string[] RowNames = { "Habilidad", "Cabeza", "Cuerpo", "Accesorio", "Colores", "Material", "Efecto", "Listo" };
+        // Cada hueco enseña solo el personaje: su modelo, su nombre (con ◀ ▶ para cambiarlo) y su habilidad
+        const float SlotW = 330f, SlotH = 400f, Gap = 12f, RowH = 20f;
+        const float PvW = 220f, PvH = 168f, HeroY = 174f, CardY = 200f, CardH = 60f, ReadyY = 266f;
+        static readonly string[] RowIds = { "hero", "ready" };
+        static readonly string[] RowNames = { "Personaje", "Listo" };
 
         sealed class RowUi
         {
@@ -114,24 +116,24 @@ namespace Delvefolk
             s.Body = Hud.NewRect(c, "Cuerpo");
             Hud.PlaceIn(s.Body, 0, 36 * Px, w - 6 * Px, (SlotH - 42) * Px);
             var pvBg = Hud.MakeImage(s.Body, "FondoVista", MathUtil.Hex(0x24190f));
-            Hud.PlaceIn(pvBg.rectTransform, (w - 6 * Px) / 2f - 52 * Px, 0, 104 * Px, 92 * Px);
+            Hud.PlaceIn(pvBg.rectTransform, (w - 6 * Px) / 2f - PvW / 2f * Px, 0, PvW * Px, PvH * Px);
             s.PreviewImg = new GameObject("Vista", typeof(RectTransform), typeof(RawImage)).GetComponent<RawImage>();
             s.PreviewImg.transform.SetParent(pvBg.transform, false);
             Hud.Stretch(s.PreviewImg.rectTransform);
             s.PreviewImg.raycastTarget = false;
             s.Rows = new RowUi[RowIds.Length];
-            for (int k = 0; k < RowIds.Length; k++) s.Rows[k] = BuildRow(s, k, 8 * Px, 96 * Px + k * RowH * Px, iw);
-            // Ficha de la habilidad
-            float cy = 96 * Px + RowIds.Length * RowH * Px + 4 * Px;
+            for (int k = 0; k < RowIds.Length; k++) s.Rows[k] = BuildRow(s, k, 8 * Px, (RowIds[k] == "ready" ? ReadyY : HeroY) * Px, iw);
+            // Habilidad del personaje: icono, nombre y una línea
+            float cy = CardY * Px;
             var card = Hud.MakeImage(s.Body, "Ficha", new Color(0, 0, 0, 0.35f));
-            Hud.PlaceIn(card.rectTransform, 8 * Px, cy, iw, 84 * Px);
+            Hud.PlaceIn(card.rectTransform, 8 * Px, cy, iw, CardH * Px);
             var cr = card.rectTransform;
             float cw = iw - 14 * Px;
             s.CardIcon = Hud.MakeText(cr, "Icono", "", 24, Fonts.Body, Color.white);
             Hud.PlaceIn(s.CardIcon.rectTransform, 6 * Px, 2 * Px, 34 * Px, 32 * Px);
             s.CardName = Hud.MakeText(cr, "Nombre", "", 12, Fonts.Body, Hud.Ink);
             s.CardName.richText = true; s.CardName.alignment = TextAlignmentOptions.Left;
-            Hud.PlaceIn(s.CardName.rectTransform, 42 * Px, 2 * Px, cw - 36 * Px, 32 * Px);
+            Hud.PlaceIn(s.CardName.rectTransform, 42 * Px, 6 * Px, cw - 36 * Px, 24 * Px);
             s.CardShort = Hud.MakeText(cr, "Resumen", "", 11, Fonts.Body, Hud.Ink);
             s.CardShort.textWrappingMode = TextWrappingModes.Normal; s.CardShort.alignment = TextAlignmentOptions.TopLeft;
             Hud.PlaceIn(s.CardShort.rectTransform, 7 * Px, 32 * Px, cw, 26 * Px);
@@ -143,7 +145,8 @@ namespace Delvefolk
             }
             Hud.PlaceIn(s.Pros.rectTransform, 7 * Px, 57 * Px, cw, 13 * Px);
             Hud.PlaceIn(s.Cons.rectTransform, 7 * Px, 70 * Px, cw, 13 * Px);
-            float ny = cy + 86 * Px;
+            foreach (var t in new[] { s.Pros, s.Cons }) t.gameObject.SetActive(false);
+            float ny = (ReadyY + RowH + 6) * Px;
             s.NoteText = Hud.MakeText(s.Body, "Nota", "", 11, Fonts.Body, MathUtil.Hex(0xff9a2a));
             s.NoteText.alignment = TextAlignmentOptions.Left; s.NoteText.overflowMode = TextOverflowModes.Ellipsis;
             Hud.PlaceIn(s.NoteText.rectTransform, 8 * Px, ny, iw, 15 * Px);
@@ -159,7 +162,7 @@ namespace Delvefolk
                 s.LeaveBtn.GetComponent<Image>().color = MathUtil.Hex(0x6a4a2a);
                 Hud.ButtonText(s.LeaveBtn).color = Hud.Ink;
             }
-            s.Preview = new CharacterPreview(g, i, Mathf.RoundToInt(104 * Px * 2), Mathf.RoundToInt(92 * Px * 2));
+            s.Preview = new CharacterPreview(g, i, Mathf.RoundToInt(PvW * Px * 2), Mathf.RoundToInt(PvH * Px * 2));
             s.PreviewImg.texture = s.Preview.Texture;
             return s;
         }
@@ -367,11 +370,13 @@ namespace Delvefolk
             var taken = TakenAbilities(i);
             var lo = Loadout(i);
             if (!taken.Contains(lo.Ability)) return;
-            foreach (var id in Abilities.Order)
+            // La habilidad va con el personaje: se cambia al primer personaje con la habilidad libre
+            foreach (var id in HeroCatalog.Order())
             {
-                if (taken.Contains(id)) continue;
-                lo.SetAbility(id);
-                Note(i, "Habilidad ocupada: cambiada a " + Abilities.Get(id).Name);
+                var ab = HeroCatalog.AbilityOf(id);
+                if (ab == null || taken.Contains(ab)) continue;
+                lo.SetHero(id);
+                Note(i, "Habilidad ocupada: cambiado a " + HeroCatalog.NameOf(id));
                 break;
             }
         }
@@ -395,6 +400,20 @@ namespace Delvefolk
                     if (!taken.Contains(ids[k])) break;
                 }
                 lo.SetAbility(ids[k]);
+            }
+            else if (row == "hero")
+            {
+                // Solo los personajes personalizados; en modo exclusivo se saltan los de habilidad ocupada
+                var ids = HeroCatalog.Order();
+                var taken = settings.ExclusiveAbilities ? TakenAbilities(i) : new List<string>();
+                int k = ids.IndexOf(lo.Hero);
+                if (k < 0) k = dir > 0 ? -1 : 0;
+                for (int n = 0; n < ids.Count; n++)
+                {
+                    k = (k + dir + ids.Count) % ids.Count;
+                    if (!taken.Contains(HeroCatalog.AbilityOf(ids[k]))) break;
+                }
+                lo.SetHero(ids[k]);
             }
             else
             {
@@ -480,7 +499,7 @@ namespace Delvefolk
                 bool ok = Available(g.Bindings[s.I]);
                 if (ok != s.PadOk) { s.PadOk = ok; Render(s.I); }
                 var lo = Loadout(s.I);
-                s.Preview.Set(Player.Looks[s.I], lo.Cosmetics, lo.Ability);
+                s.Preview.Set(Player.Looks[s.I], lo.Cosmetics, lo.Ability, lo.Hero);
                 s.Preview.Update(dt);
             }
             // Unirse: cualquier dispositivo que no use nadie
@@ -539,16 +558,14 @@ namespace Delvefolk
                 }
                 string label, icon;
                 if (RowIds[k] == "ability") { var a = Abilities.Get(lo.Ability); label = a.Name; icon = a.Icon; }
+                else if (RowIds[k] == "hero") { label = HeroCatalog.NameOf(lo.Hero); icon = HeroCatalog.IconOf(lo.Hero); }
                 else { var it = Cosmetics.Get(lo.Cosmetics[RowIds[k]]); label = it.Name; icon = it.Icon; }
                 row.Value.text = icon + " " + label;
             }
             var ab = Abilities.Get(lo.Ability);
             s.CardIcon.text = ab.Icon;
-            s.CardName.text = "<b>" + ab.Name + "</b>\n<size=85%><color=#8a7a62>Enfriamiento " + ab.Cooldown + " s · tecla " + sc.AbilityKey + "</color></size>";
+            s.CardName.text = "<b>" + ab.Name + "</b>";
             s.CardShort.text = ab.Short;
-            // Ficha corta: solo la ventaja y la desventaja principales
-            s.Pros.text = ab.Pros != null && ab.Pros.Length > 0 ? "<color=#7dd65b><b>+ </b></color>" + ab.Pros[0] : "";
-            s.Cons.text = ab.Cons != null && ab.Cons.Length > 0 ? "<color=#ff6a5a><b>− </b></color>" + ab.Cons[0] : "";
         }
 
         void RenderSettings()

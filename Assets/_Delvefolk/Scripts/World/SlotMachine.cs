@@ -148,6 +148,7 @@ namespace Delvefolk
         public bool Spin(Player p)
         {
             if (!CanUse) return false;
+            if (G.SlotUi.Active) return false;   // una sola tirada a la vez en pantalla
             if (SlotMachineMath.Total(cfg.Enemies) <= 0f || SlotMachineMath.Total(cfg.Abilities) <= 0f || SlotMachineMath.Total(cfg.Affinities) <= 0f)
             {
                 G.Ui.Toast("La tragaperras no tiene premios configurados (todos los pesos a 0).", 3f);
@@ -170,6 +171,9 @@ namespace Delvefolk
             T = 0f;
             Applied = false;
             G.Audio.Play("pickup");
+            reels.text = "<b>🎰</b>";
+            // La animación de los rodillos va en pantalla (SlotOverlay); al pararse llama a Finish
+            G.SlotUi.Open(this, p, cfg);
             return true;
         }
 
@@ -190,35 +194,16 @@ namespace Delvefolk
             // Los rótulos miran siempre a la cámara
             var cam = G.CameraCtl.Cam.transform.rotation;
             reels.transform.rotation = cam; caption.transform.rotation = cam;
-            if (State == SlotState.Spinning)
-            {
-                T += dt;
-                // Cada rodillo enseña opciones al azar hasta su momento de parar; entonces, el resultado elegido
-                string a = T >= cfg.ReelSpin ? EnemyResult.Icon : Flicker(cfg.Enemies, 0);
-                string b = T >= cfg.ReelSpin + cfg.ReelStagger ? AbilityResult.Icon : Flicker(cfg.Abilities, 1);
-                string c = T >= SpinTotal ? AffinityResult.Icon : Flicker(cfg.Affinities, 2);
-                reels.text = "<b>" + a + " " + b + " " + c + "</b>";
-                if (T >= SpinTotal)
-                {
-                    State = SlotState.Revealing; T = 0f;
-                    G.Audio.Play("gate");
-                    caption.text = AffinityResult.Label.ToUpperInvariant();
-                    G.Ui.Banner("🎰 " + EnemyResult.Icon + " " + AbilityResult.Icon + " " + AffinityResult.Icon,
-                        AbilityResult.Label + " · " + AffinityResult.Label + " · " + EnemyResult.Label);
-                }
-            }
-            else if (State == SlotState.Revealing)
-            {
-                T += dt;
-                if (T >= cfg.RevealPause) { State = SlotState.Done; ApplyResults(); }
-            }
         }
 
-        string Flicker(List<SlotOption> opts, int reel)
+        // Fin de la tirada (lo llama SlotOverlay al pararse el último rodillo): aplica los resultados una vez
+        public void Finish()
         {
-            int n = opts.Count;
-            int i = (int)(T * 14f + reel * 3) % Mathf.Max(1, n);
-            return opts[i] != null ? opts[i].Icon : "?";
+            if (Applied) return;
+            State = SlotState.Done;
+            reels.text = "<b>" + EnemyResult.Icon + " " + AbilityResult.Icon + " " + AffinityResult.Icon + "</b>";
+            caption.text = AffinityResult.Label.ToUpperInvariant();
+            ApplyResults();
         }
 
         // Aplica los tres resultados una sola vez

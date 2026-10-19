@@ -9,6 +9,36 @@ namespace Delvefolk.Tests
     {
         const string TestPrefix = "delvefolk.pruebas.";
 
+        // Estas pruebas son del aventurero clásico (habilidad libre y cosméticos); la sala real solo ofrece personajes
+        [SetUp] public void ClassicOn() { HeroCatalog.ClassicAllowed = true; }
+        [TearDown] public void ClassicOff() { HeroCatalog.ClassicAllowed = false; }
+
+        [Test]
+        public void Personaje_LaHabilidadEsLaSuyaYSeGuarda()
+        {
+            HeroCatalog.ClassicAllowed = false;
+            string prefix = Storage.Prefix; bool enabled = Storage.Enabled;
+            Storage.Prefix = TestPrefix; Storage.Enabled = true;
+            try
+            {
+                var lo = new PlayerLoadout(0);
+                Assert.AreNotEqual(HeroCatalog.Classic, lo.Hero, "por defecto, un personaje personalizado");
+                Assert.AreEqual(HeroCatalog.AbilityOf(lo.Hero), lo.Ability);
+                Assert.AreNotEqual(lo.Hero, new PlayerLoadout(1).Hero, "uno distinto por jugador");
+                Assert.IsTrue(lo.SetHero("embercloak_alchemist"));
+                Assert.AreEqual("blast", lo.Ability);
+                lo.Save();
+                var back = PlayerLoadout.Load(0);
+                Assert.AreEqual("embercloak_alchemist", back.Hero);
+                Assert.AreEqual("blast", back.Ability);
+            }
+            finally
+            {
+                Storage.Delete("loadout.0");
+                Storage.Prefix = prefix; Storage.Enabled = enabled;
+            }
+        }
+
         [Test]
         public void Cosmeticos_CapaYMochilaOcupanLaEspalda()
         {

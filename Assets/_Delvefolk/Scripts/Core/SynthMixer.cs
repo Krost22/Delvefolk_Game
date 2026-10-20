@@ -7,9 +7,18 @@ namespace Delvefolk
     // Mezclador del audio sintetizado: vive junto al AudioListener y suma las voces a la mezcla final
     // (hilo de audio). Ganancia maestra y compresor como el DynamicsCompressorNode del navegador:
     // umbral −14 dB, rodilla 30 dB, ratio 4, ataque 3 ms, relajación 250 ms y ganancia de compensación.
+    //
+    // WebGL no admite OnAudioFilterRead: allí cada voz se reproduce con un AudioSource (de un grupo fijo) y un
+    // AudioClip creado una vez a partir del mismo PCM; mismas recetas, tono y ganancia (sin el compresor).
     public sealed class SynthMixer : MonoBehaviour
     {
         struct Voice { public float[] Data; public double Pos; public float Step; }
+
+        public static bool UseSources = Application.platform == RuntimePlatform.WebGLPlayer;
+        const int SourceCount = 16;
+        AudioSource[] sources;
+        int nextSource;
+        readonly Dictionary<float[], AudioClip> clips = new Dictionary<float[], AudioClip>();
 
         const int MaxVoices = 48;
         readonly List<Voice> voices = new List<Voice>(MaxVoices);
@@ -33,6 +42,7 @@ namespace Delvefolk
 
         public void Add(float[] pcm, float step)
         {
+            if (UseSources) { PlaySource(pcm, step); return; }
             lock (gate)
             {
                 if (voices.Count >= MaxVoices) voices.RemoveAt(0);
@@ -42,6 +52,41 @@ namespace Delvefolk
 
         public int VoiceCount { get { lock (gate) return voices.Count; } }
 
+        void PlaySource(float[] pcm, float step)
+        {
+            if (Muted || pcm == null || pcm.Length < 2) return;
+            if (sources == null)
+            {
+                sources = new AudioSource[SourceCount];
+                // En un hijo: así no comparten objeto con el filtro del oyente
+                var holder = new GameObject("FuentesAudio");
+                holder.transform.SetParent(transform, false);
+                for (int i = 0; i < SourceCount; i++)
+                {
+                    var s = holder.AddComponent<AudioSource>();
+                    s.playOnAwake = false; s.spatialBlend = 0f; s.loop = false;
+                    sources[i] = s;
+                }
+            }
+            AudioClip clip;
+            if (!clips.TryGetValue(pcm, out clip) || !clip)
+            {
+                clip = AudioClip.Create("sintetizado", pcm.Length, 1, AudioSynth.SampleRate, false);
+                clip.SetData(pcm, 0);
+                clips[pcm] = clip;
+            }
+            // La fuente libre (o la que lleva más tiempo sonando)
+            AudioSource src = null;
+            for (int i = 0; i < SourceCount && src == null; i++) { var s = sources[(nextSource + i) % SourceCount]; if (!s.isPlaying) src = s; }
+            if (src == null) src = sources[nextSource];
+            nextSource = (nextSource + 1) % SourceCount;
+            src.clip = clip;
+            src.pitch = step;
+            src.volume = master * 0.9f;
+            src.Play();
+        }
+
+#if !UNITY_WEBGL || UNITY_EDITOR
         void OnAudioFilterRead(float[] data, int channels)
         {
             int frames = data.Length / channels;
@@ -73,6 +118,8 @@ namespace Delvefolk
                 }
             }
         }
+
+#endif
 
         // ---------- Curva del compresor (DynamicsCompressorKernel de Chromium) ----------
         static float ToDb(float x) { return 20f * Mathf.Log10(Mathf.Max(1e-9f, x)); }

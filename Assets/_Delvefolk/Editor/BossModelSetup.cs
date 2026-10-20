@@ -90,6 +90,8 @@ namespace Delvefolk.EditorTools
                 if (!(imp.GetExternalObjectMap().TryGetValue(id, out cur) && cur == mat)) { imp.AddRemap(id, mat); dirty = true; }
             }
             if (imp.animationType != ModelImporterAnimationType.Generic) { imp.animationType = ModelImporterAnimationType.Generic; dirty = true; }
+            // Legible: el juego hornea la malla para medir su altura (en una build, sin esto BakeMesh falla)
+            if (!imp.isReadable) { imp.isReadable = true; dirty = true; }
             if (imp.avatarSetup != ModelImporterAvatarSetup.CreateFromThisModel) { imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel; dirty = true; }
             var clips = imp.clipAnimations.Length > 0 ? imp.clipAnimations : imp.defaultClipAnimations;
             foreach (var c in clips)
